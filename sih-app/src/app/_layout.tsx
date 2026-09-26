@@ -2,7 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { Platform } from 'react-native';
 import { Slot, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+import { StatusBar } from 'expo-status-bar';
 import { SahayakProvider, useSahayak } from '@/context/SahayakContext';
+import { ThemeProvider, useTheme } from '@/context/ThemeContext';
 import Header from '@/components/Header';
 import { getDatabase } from '@/offline/database';
 import { getSession } from '@/services/auth';
@@ -21,6 +23,7 @@ SplashScreen.preventAutoHideAsync();
 
 function AppContent() {
   const { role, setRole, setCurrentUser } = useSahayak();
+  const { isDark } = useTheme();
   const router = useRouter();
   const segments = useSegments();
   const [initialized, setInitialized] = useState(false);
@@ -52,6 +55,7 @@ function AppContent() {
 
   return (
     <>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       {!inAuthGroup && <Header />}
       <Slot />
     </>
@@ -60,9 +64,11 @@ function AppContent() {
 
 export default function RootLayout() {
   return (
-    <SahayakProvider>
-      <AppContent />
-    </SahayakProvider>
+    <ThemeProvider>
+      <SahayakProvider>
+        <AppContent />
+      </SahayakProvider>
+    </ThemeProvider>
   );
 }
 

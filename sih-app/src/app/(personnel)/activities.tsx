@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
-import { Colors, Spacing, Radius } from '@/constants/theme';
+import { Spacing, Radius } from '@/constants/theme';
 import QuickTapGame from '@/components/games/QuickTapGame';
 import GoNoGoGame from '@/components/games/GoNoGoGame';
 import SequenceRecallGame from '@/components/games/SequenceRecallGame';
@@ -21,6 +21,9 @@ import {
   getTopScores,
 } from '@/repositories/activities';
 import { useSahayak } from '@/context/SahayakContext';
+import { useTheme } from '@/context/ThemeContext';
+import { FadeInView } from '@/components/animations/FadeInView';
+import { BouncyPressable } from '@/components/animations/BouncyPressable';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Constants
@@ -58,17 +61,12 @@ function formatDate(iso: string) {
     ' ' + d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
 }
 
-function scoreColor(score: number) {
-  if (score >= 80) return Colors.light.success;
-  if (score >= 50) return Colors.light.warning;
-  return Colors.light.stateSustained;
-}
-
 // ─────────────────────────────────────────────────────────────────────────────
 // Component
 // ─────────────────────────────────────────────────────────────────────────────
 export default function ActivitiesScreen() {
   const { currentUser } = useSahayak();
+  const { colors, isDark } = useTheme();
   const personId = currentUser?.id ?? 'person-001';
 
   const [activeGame, setActiveGame] = useState<string | null>(null);
@@ -80,6 +78,12 @@ export default function ActivitiesScreen() {
   const [topScores, setTopScores] = useState<any[]>([]);
   const [loadingScores, setLoadingScores] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+
+  function getScoreColor(score: number) {
+    if (score >= 80) return colors.success;
+    if (score >= 50) return colors.warning;
+    return colors.stateSustained;
+  }
 
   // ── Data loading ─────────────────────────────────────────────────────────
   const loadScores = useCallback(async () => {
@@ -134,24 +138,33 @@ export default function ActivitiesScreen() {
   function renderPlayTab() {
     return (
       <ScrollView style={styles.list} contentContainerStyle={{ paddingBottom: 24 }}>
-        <Text style={styles.sectionTitle}>Daily Recommended</Text>
-        {ACTIVITIES.map(act => (
-          <TouchableOpacity key={act.id} style={styles.card} onPress={() => setActiveGame(act.id)}>
-            <View style={styles.iconBox}>
-              <Ionicons name={act.icon as any} size={24} color={Colors.light.primary} />
-            </View>
-            <View style={styles.cardContent}>
-              <Text style={styles.cardTitle}>{act.title}</Text>
-              <Text style={styles.cardDesc}>{act.desc}</Text>
-            </View>
-            {completedToday.has(act.id) ? (
-              <Ionicons name="checkmark-circle" size={24} color={Colors.light.success} />
-            ) : act.recommended ? (
-              <View style={styles.recBadge}><Text style={styles.recText}>Rec</Text></View>
-            ) : (
-              <Ionicons name="chevron-forward" size={20} color={Colors.light.textMuted} />
-            )}
-          </TouchableOpacity>
+        <FadeInView delay={50}>
+          <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Daily Recommended Tasks</Text>
+        </FadeInView>
+        {ACTIVITIES.map((act, idx) => (
+          <FadeInView key={act.id} delay={80 + idx * 40}>
+            <BouncyPressable
+              style={[styles.card, { backgroundColor: colors.backgroundElement, borderColor: colors.border }]}
+              onPress={() => setActiveGame(act.id)}
+            >
+              <View style={[styles.iconBox, { backgroundColor: isDark ? 'rgba(74, 144, 226, 0.15)' : colors.primaryLight }]}>
+                <Ionicons name={act.icon as any} size={24} color={colors.primary} />
+              </View>
+              <View style={styles.cardContent}>
+                <Text style={[styles.cardTitle, { color: colors.text }]}>{act.title}</Text>
+                <Text style={[styles.cardDesc, { color: colors.textSecondary }]}>{act.desc}</Text>
+              </View>
+              {completedToday.has(act.id) ? (
+                <Ionicons name="checkmark-circle" size={24} color={colors.success} />
+              ) : act.recommended ? (
+                <View style={[styles.recBadge, { backgroundColor: isDark ? 'rgba(46, 204, 113, 0.15)' : colors.accentLight }]}>
+                  <Text style={[styles.recText, { color: isDark ? colors.success : colors.accent }]}>Rec</Text>
+                </View>
+              ) : (
+                <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+              )}
+            </BouncyPressable>
+          </FadeInView>
         ))}
       </ScrollView>
     );
@@ -166,88 +179,102 @@ export default function ActivitiesScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={() => { setRefreshing(true); loadScores(); }}
-            tintColor={Colors.light.primary}
+            tintColor={colors.primary}
           />
         }
       >
         {/* ── Personal Bests ── */}
-        <Text style={styles.sectionTitle}>Personal Bests</Text>
+        <FadeInView delay={50}>
+          <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Personal Bests</Text>
+        </FadeInView>
         {topScores.length === 0 ? (
           <View style={styles.emptyCard}>
-            <Ionicons name="trophy-outline" size={36} color={Colors.light.textMuted} />
-            <Text style={styles.emptyText}>No scores yet. Play a game to get started!</Text>
+            <Ionicons name="trophy-outline" size={36} color={colors.textMuted} />
+            <Text style={[styles.emptyText, { color: colors.textMuted }]}>No scores yet. Play a game to get started!</Text>
           </View>
         ) : (
-          topScores.map((row, i) => (
-            <View key={row.activity_type} style={styles.topScoreCard}>
-              <View style={styles.topScoreRank}>
-                <Text style={styles.rankNum}>#{i + 1}</Text>
-              </View>
-              <View style={styles.iconBox}>
-                <Ionicons
-                  name={(ACTIVITY_ICON[row.activity_type] ?? 'game-controller') as any}
-                  size={22}
-                  color={Colors.light.primary}
-                />
-              </View>
-              <View style={styles.cardContent}>
-                <Text style={styles.cardTitle}>{ACTIVITY_LABEL[row.activity_type] ?? row.activity_type}</Text>
-                <Text style={styles.cardDesc}>{row.attempts} attempt{row.attempts !== 1 ? 's' : ''}</Text>
-              </View>
-              <View style={[styles.scorePill, { backgroundColor: scoreColor(row.best_score) + '22' }]}>
-                <Text style={[styles.scoreNum, { color: scoreColor(row.best_score) }]}>
-                  {Math.round(row.best_score)}
-                </Text>
-                <Text style={[styles.scoreLabel, { color: scoreColor(row.best_score) }]}>pts</Text>
-              </View>
-            </View>
-          ))
+          topScores.map((row, i) => {
+            const scColor = getScoreColor(row.best_score);
+            return (
+              <FadeInView key={row.activity_type} delay={80 + i * 40}>
+                <View style={[styles.topScoreCard, { backgroundColor: colors.backgroundElement, borderColor: colors.border }]}>
+                  <View style={styles.topScoreRank}>
+                    <Text style={[styles.rankNum, { color: colors.textMuted }]}>#{i + 1}</Text>
+                  </View>
+                  <View style={[styles.iconBox, { backgroundColor: isDark ? 'rgba(74, 144, 226, 0.15)' : colors.primaryLight }]}>
+                    <Ionicons
+                      name={(ACTIVITY_ICON[row.activity_type] ?? 'game-controller') as any}
+                      size={22}
+                      color={colors.primary}
+                    />
+                  </View>
+                  <View style={styles.cardContent}>
+                    <Text style={[styles.cardTitle, { color: colors.text }]}>{ACTIVITY_LABEL[row.activity_type] ?? row.activity_type}</Text>
+                    <Text style={[styles.cardDesc, { color: colors.textSecondary }]}>{row.attempts} attempt{row.attempts !== 1 ? 's' : ''}</Text>
+                  </View>
+                  <View style={[styles.scorePill, { backgroundColor: scColor + '22' }]}>
+                    <Text style={[styles.scoreNum, { color: scColor }]}>
+                      {Math.round(row.best_score)}
+                    </Text>
+                    <Text style={[styles.scoreLabel, { color: scColor }]}>pts</Text>
+                  </View>
+                </View>
+              </FadeInView>
+            );
+          })
         )}
 
         {/* ── Recent History ── */}
-        <Text style={[styles.sectionTitle, { marginTop: Spacing.six }]}>Recent Sessions</Text>
+        <FadeInView delay={120}>
+          <Text style={[styles.sectionTitle, { marginTop: Spacing.six, color: colors.textSecondary }]}>Recent Sessions</Text>
+        </FadeInView>
         {recentSessions.length === 0 ? (
           <View style={styles.emptyCard}>
-            <Ionicons name="time-outline" size={36} color={Colors.light.textMuted} />
-            <Text style={styles.emptyText}>No sessions recorded yet.</Text>
+            <Ionicons name="time-outline" size={36} color={colors.textMuted} />
+            <Text style={[styles.emptyText, { color: colors.textMuted }]}>No sessions recorded yet.</Text>
           </View>
         ) : (
-          recentSessions.map(s => (
-            <View key={s.id} style={styles.historyCard}>
-              <View style={[styles.historyIconBox, { backgroundColor: Colors.light.primaryLight }]}>
-                <Ionicons
-                  name={(ACTIVITY_ICON[s.activity_type] ?? 'game-controller') as any}
-                  size={18}
-                  color={Colors.light.primary}
-                />
-              </View>
-              <View style={styles.historyMeta}>
-                <Text style={styles.historyTitle}>{ACTIVITY_LABEL[s.activity_type] ?? s.activity_type}</Text>
-                <Text style={styles.historyDate}>{formatDate(s.start_time)}</Text>
-                <View style={styles.historyStats}>
-                  <Text style={styles.historyStat}>
-                    ✓ {s.correct_answers}  ✗ {s.incorrect_answers}
-                  </Text>
-                  {s.avg_reaction_time_ms > 0 && (
-                    <Text style={styles.historyStat}>
-                      ⚡ {Math.round(s.avg_reaction_time_ms)} ms
+          recentSessions.map((s, i) => {
+            const scColor = getScoreColor(s.score);
+            return (
+              <FadeInView key={s.id} delay={140 + i * 30}>
+                <View style={[styles.historyCard, { backgroundColor: colors.backgroundElement, borderColor: colors.border }]}>
+                  <View style={[styles.historyIconBox, { backgroundColor: isDark ? 'rgba(74, 144, 226, 0.15)' : colors.primaryLight }]}>
+                    <Ionicons
+                      name={(ACTIVITY_ICON[s.activity_type] ?? 'game-controller') as any}
+                      size={18}
+                      color={colors.primary}
+                    />
+                  </View>
+                  <View style={styles.historyMeta}>
+                    <Text style={[styles.historyTitle, { color: colors.text }]}>{ACTIVITY_LABEL[s.activity_type] ?? s.activity_type}</Text>
+                    <Text style={[styles.historyDate, { color: colors.textMuted }]}>{formatDate(s.start_time)}</Text>
+                    <View style={styles.historyStats}>
+                      <Text style={[styles.historyStat, { color: colors.textSecondary }]}>
+                        ✓ {s.correct_answers}  ✗ {s.incorrect_answers}
+                      </Text>
+                      {s.avg_reaction_time_ms > 0 && (
+                        <Text style={[styles.historyStat, { color: colors.warning }]}>
+                          ⚡ {Math.round(s.avg_reaction_time_ms)} ms
+                        </Text>
+                      )}
+                      {s.accuracy > 0 && (
+                        <Text style={[styles.historyStat, { color: colors.success }]}>
+                          {Math.round(s.accuracy)}% acc
+                        </Text>
+                      )}
+                    </View>
+                  </View>
+                  <View style={[styles.scorePill, { backgroundColor: scColor + '22' }]}>
+                    <Text style={[styles.scoreNum, { color: scColor }]}>
+                      {Math.round(s.score)}
                     </Text>
-                  )}
-                  {s.accuracy > 0 && (
-                    <Text style={styles.historyStat}>
-                      {Math.round(s.accuracy)}% acc
-                    </Text>
-                  )}
+                    <Text style={[styles.scoreLabel, { color: scColor }]}>pts</Text>
+                  </View>
                 </View>
-              </View>
-              <View style={[styles.scorePill, { backgroundColor: scoreColor(s.score) + '22' }]}>
-                <Text style={[styles.scoreNum, { color: scoreColor(s.score) }]}>
-                  {Math.round(s.score)}
-                </Text>
-                <Text style={[styles.scoreLabel, { color: scoreColor(s.score) }]}>pts</Text>
-              </View>
-            </View>
-          ))
+              </FadeInView>
+            );
+          })
         )}
       </ScrollView>
     );
@@ -255,35 +282,35 @@ export default function ActivitiesScreen() {
 
   // ── Render ───────────────────────────────────────────────────────────────
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Cognitive Activities</Text>
+      <View style={[styles.header, { backgroundColor: colors.backgroundElement, borderBottomColor: colors.border }]}>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Cognitive Activities</Text>
       </View>
 
       {/* Tab Bar */}
-      <View style={styles.tabBar}>
+      <View style={[styles.tabBar, { backgroundColor: colors.backgroundElement, borderBottomColor: colors.border }]}>
         <TouchableOpacity
-          style={[styles.tabItem, tab === 'play' && styles.tabItemActive]}
+          style={[styles.tabItem, tab === 'play' && [styles.tabItemActive, { borderBottomColor: colors.primary }]]}
           onPress={() => setTab('play')}
         >
           <Ionicons
             name="game-controller"
             size={18}
-            color={tab === 'play' ? Colors.light.primary : Colors.light.textMuted}
+            color={tab === 'play' ? colors.primary : colors.textMuted}
           />
-          <Text style={[styles.tabLabel, tab === 'play' && styles.tabLabelActive]}>Play</Text>
+          <Text style={[styles.tabLabel, { color: colors.textMuted }, tab === 'play' && { color: colors.primary, fontWeight: '700' }]}>Play</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.tabItem, tab === 'scores' && styles.tabItemActive]}
+          style={[styles.tabItem, tab === 'scores' && [styles.tabItemActive, { borderBottomColor: colors.primary }]]}
           onPress={() => { setTab('scores'); loadScores(); }}
         >
           <Ionicons
             name="trophy"
             size={18}
-            color={tab === 'scores' ? Colors.light.primary : Colors.light.textMuted}
+            color={tab === 'scores' ? colors.primary : colors.textMuted}
           />
-          <Text style={[styles.tabLabel, tab === 'scores' && styles.tabLabelActive]}>Scores</Text>
+          <Text style={[styles.tabLabel, { color: colors.textMuted }, tab === 'scores' && { color: colors.primary, fontWeight: '700' }]}>Scores</Text>
         </TouchableOpacity>
       </View>
 
@@ -326,46 +353,45 @@ export default function ActivitiesScreen() {
 // Styles
 // ─────────────────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  container:      { flex: 1, backgroundColor: Colors.light.background },
-  header:         { padding: Spacing.four, backgroundColor: Colors.light.backgroundElement, borderBottomWidth: 1, borderBottomColor: Colors.light.border },
-  headerTitle:    { fontSize: 24, fontWeight: 'bold', color: Colors.light.navy },
+  container:      { flex: 1 },
+  header:         { padding: Spacing.four, borderBottomWidth: 1 },
+  headerTitle:    { fontSize: 24, fontWeight: 'bold' },
 
   /* Tab bar */
-  tabBar:         { flexDirection: 'row', backgroundColor: Colors.light.backgroundElement, borderBottomWidth: 1, borderBottomColor: Colors.light.border },
+  tabBar:         { flexDirection: 'row', borderBottomWidth: 1 },
   tabItem:        { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.two, paddingVertical: Spacing.three },
-  tabItemActive:  { borderBottomWidth: 2, borderBottomColor: Colors.light.primary },
-  tabLabel:       { fontSize: 14, fontWeight: '500', color: Colors.light.textMuted },
-  tabLabelActive: { color: Colors.light.primary, fontWeight: '700' },
+  tabItemActive:  { borderBottomWidth: 2 },
+  tabLabel:       { fontSize: 14, fontWeight: '500' },
 
   list:           { padding: Spacing.four },
-  sectionTitle:   { fontSize: 14, fontWeight: 'bold', color: Colors.light.textMuted, textTransform: 'uppercase', marginBottom: Spacing.four, letterSpacing: 1 },
+  sectionTitle:   { fontSize: 13, fontWeight: '800', textTransform: 'uppercase', marginBottom: Spacing.three, letterSpacing: 0.8 },
 
   /* Play-tab cards */
-  card:           { flexDirection: 'row', backgroundColor: Colors.light.backgroundElement, padding: Spacing.four, borderRadius: Radius.lg, marginBottom: Spacing.three, alignItems: 'center', borderWidth: 1, borderColor: Colors.light.borderSubtle },
-  iconBox:        { width: 48, height: 48, borderRadius: 24, backgroundColor: Colors.light.primaryLight, alignItems: 'center', justifyContent: 'center', marginRight: Spacing.four },
+  card:           { flexDirection: 'row', padding: Spacing.four, borderRadius: Radius.lg, marginBottom: Spacing.three, alignItems: 'center', borderWidth: 1 },
+  iconBox:        { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center', marginRight: Spacing.four },
   cardContent:    { flex: 1 },
-  cardTitle:      { fontSize: 16, fontWeight: 'bold', color: Colors.light.text },
-  cardDesc:       { fontSize: 13, color: Colors.light.textSecondary, marginTop: Spacing.one },
-  recBadge:       { backgroundColor: Colors.light.accentLight, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4 },
-  recText:        { color: Colors.light.accent, fontSize: 12, fontWeight: 'bold' },
+  cardTitle:      { fontSize: 16, fontWeight: 'bold' },
+  cardDesc:       { fontSize: 13, marginTop: Spacing.one },
+  recBadge:       { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4 },
+  recText:        { fontSize: 12, fontWeight: 'bold' },
 
   /* Scores tab */
   emptyCard:      { alignItems: 'center', paddingVertical: Spacing.ten, gap: Spacing.three },
-  emptyText:      { color: Colors.light.textMuted, textAlign: 'center', fontSize: 14 },
+  emptyText:      { textAlign: 'center', fontSize: 14 },
 
-  topScoreCard:   { flexDirection: 'row', backgroundColor: Colors.light.backgroundElement, padding: Spacing.four, borderRadius: Radius.lg, marginBottom: Spacing.three, alignItems: 'center', borderWidth: 1, borderColor: Colors.light.borderSubtle },
+  topScoreCard:   { flexDirection: 'row', padding: Spacing.four, borderRadius: Radius.lg, marginBottom: Spacing.three, alignItems: 'center', borderWidth: 1 },
   topScoreRank:   { width: 28, alignItems: 'center', marginRight: Spacing.two },
-  rankNum:        { fontSize: 12, fontWeight: '700', color: Colors.light.textMuted },
+  rankNum:        { fontSize: 12, fontWeight: '700' },
 
   scorePill:      { alignItems: 'center', justifyContent: 'center', borderRadius: Radius.md, paddingHorizontal: Spacing.three, paddingVertical: Spacing.two, minWidth: 52 },
   scoreNum:       { fontSize: 20, fontWeight: '800', lineHeight: 24 },
   scoreLabel:     { fontSize: 10, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5 },
 
-  historyCard:    { flexDirection: 'row', backgroundColor: Colors.light.backgroundElement, padding: Spacing.three, borderRadius: Radius.lg, marginBottom: Spacing.two, alignItems: 'center', borderWidth: 1, borderColor: Colors.light.borderSubtle },
+  historyCard:    { flexDirection: 'row', padding: Spacing.three, borderRadius: Radius.lg, marginBottom: Spacing.two, alignItems: 'center', borderWidth: 1 },
   historyIconBox: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', marginRight: Spacing.three },
   historyMeta:    { flex: 1 },
-  historyTitle:   { fontSize: 14, fontWeight: '600', color: Colors.light.text },
-  historyDate:    { fontSize: 12, color: Colors.light.textMuted, marginTop: 2 },
+  historyTitle:   { fontSize: 14, fontWeight: '600' },
+  historyDate:    { fontSize: 12, marginTop: 2 },
   historyStats:   { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two, marginTop: 4 },
-  historyStat:    { fontSize: 11, color: Colors.light.textSecondary },
+  historyStat:    { fontSize: 11 },
 });

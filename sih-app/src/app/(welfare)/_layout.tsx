@@ -1,46 +1,64 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
+import { Platform } from 'react-native';
 
 export default function WelfareLayout() {
+  const { colors } = useTheme();
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: Colors.light.accent,
-        tabBarInactiveTintColor: Colors.light.textMuted,
+        tabBarActiveTintColor: colors.accent,
+        tabBarInactiveTintColor: colors.textMuted,
         tabBarStyle: {
-          backgroundColor: Colors.light.backgroundElement,
-          borderTopColor: Colors.light.border,
+          backgroundColor: colors.backgroundElement,
+          borderTopColor: colors.border,
+          height: Platform.OS === 'ios' ? 84 : 64,
+          paddingBottom: Platform.OS === 'ios' ? 24 : 8,
+          paddingTop: 6,
+        },
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: '600',
         },
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Dashboard',
-          tabBarIcon: ({ color }) => <Ionicons name="apps" size={24} color={color} />,
+          title: 'Command Grid',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? 'apps' : 'apps-outline'} size={22} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="personnel"
         options={{
           title: 'Personnel',
-          tabBarIcon: ({ color }) => <Ionicons name="people" size={24} color={color} />,
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? 'people' : 'people-outline'} size={22} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="cases"
         options={{
           title: 'Cases',
-          tabBarIcon: ({ color }) => <Ionicons name="folder-open" size={24} color={color} />,
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? 'folder-open' : 'folder-open-outline'} size={22} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="interventions"
         options={{
           title: 'Interventions',
-          tabBarIcon: ({ color }) => <Ionicons name="flask" size={24} color={color} />,
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? 'flask' : 'flask-outline'} size={22} color={color} />
+          ),
         }}
       />
     </Tabs>

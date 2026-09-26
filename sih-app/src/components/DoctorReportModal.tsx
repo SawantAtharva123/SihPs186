@@ -14,6 +14,7 @@ import { Colors, Spacing, Radius, Shadow } from '@/constants/theme';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { insertMedicalRecord } from '@/repositories/medical';
 import { useSahayak } from '@/context/SahayakContext';
+import { useTheme } from '@/context/ThemeContext';
 
 interface DoctorReportModalProps {
   visible: boolean;
@@ -38,6 +39,7 @@ const STRESS_INDICATORS: Array<'Normal' | 'Moderate' | 'High' | 'Severe'> = [
 
 export default function DoctorReportModal({ visible, onClose, onSaved }: DoctorReportModalProps) {
   const { currentUser } = useSahayak();
+  const { colors, isDark } = useTheme();
   const personId = currentUser?.id ?? 'person-001';
 
   const [doctorName, setDoctorName] = useState('Dr. S. Nair, MD');
@@ -81,72 +83,76 @@ export default function DoctorReportModal({ visible, onClose, onSaved }: DoctorR
 
   const getIndicatorColor = (ind: string) => {
     switch (ind) {
-      case 'Severe': return Colors.light.stateSustained;
-      case 'High': return Colors.light.warning;
-      case 'Moderate': return Colors.light.stateEmerging;
-      default: return Colors.light.success;
+      case 'Severe': return colors.stateSustained;
+      case 'High': return colors.warning;
+      case 'Moderate': return colors.stateEmerging;
+      default: return colors.success;
     }
   };
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="formSheet" onRequestClose={onClose}>
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         {/* Header */}
-        <View style={styles.header}>
+        <View style={[styles.header, { backgroundColor: colors.backgroundElement, borderBottomColor: colors.border }]}>
           <TouchableOpacity onPress={onClose} style={styles.iconButton}>
-            <Ionicons name="close" size={24} color={Colors.light.textSecondary} />
+            <Ionicons name="close" size={24} color={colors.textSecondary} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Upload Doctor / Medical Report</Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Upload Doctor / Medical Report</Text>
           <View style={styles.iconButton} />
         </View>
 
         <ScrollView contentContainerStyle={styles.scrollContent}>
           {/* Info Banner */}
-          <View style={styles.banner}>
-            <Ionicons name="medical" size={22} color={Colors.light.primary} />
-            <Text style={styles.bannerText}>
+          <View style={[styles.banner, { backgroundColor: isDark ? 'rgba(74, 144, 226, 0.15)' : colors.primaryLight }]}>
+            <Ionicons name="medical" size={22} color={colors.primary} />
+            <Text style={[styles.bannerText, { color: isDark ? '#93C5FD' : colors.primaryHover }]}>
               Medical reports are integrated into the multi-modal AI stress assessment to safeguard personnel welfare and prevent undercounting strain.
             </Text>
           </View>
 
           {/* Doctor & Facility */}
-          <Text style={styles.label}>Attending Medical Officer</Text>
+          <Text style={[styles.label, { color: colors.text }]}>Attending Medical Officer</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { backgroundColor: isDark ? colors.backgroundTertiary : colors.backgroundElement, borderColor: colors.border, color: colors.text }]}
             value={doctorName}
             onChangeText={setDoctorName}
             placeholder="E.g. Dr. A. K. Verma, MD"
-            placeholderTextColor={Colors.light.textMuted}
+            placeholderTextColor={colors.textMuted}
           />
 
-          <Text style={styles.label}>Medical Facility / Hospital</Text>
+          <Text style={[styles.label, { color: colors.text }]}>Medical Facility / Hospital</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { backgroundColor: isDark ? colors.backgroundTertiary : colors.backgroundElement, borderColor: colors.border, color: colors.text }]}
             value={facility}
             onChangeText={setFacility}
             placeholder="E.g. Composite Hospital, Border Wing"
-            placeholderTextColor={Colors.light.textMuted}
+            placeholderTextColor={colors.textMuted}
           />
 
           {/* Consultation Type */}
-          <Text style={styles.label}>Consultation Type</Text>
+          <Text style={[styles.label, { color: colors.text }]}>Consultation Type</Text>
           <View style={styles.chipContainer}>
             {CONSULTATION_TYPES.map((type) => {
               const active = consultationType === type;
               return (
                 <TouchableOpacity
                   key={type}
-                  style={[styles.chip, active && styles.chipActive]}
+                  style={[
+                    styles.chip,
+                    { backgroundColor: colors.backgroundElement, borderColor: colors.border },
+                    active && { borderColor: colors.primary, backgroundColor: isDark ? 'rgba(74, 144, 226, 0.15)' : colors.primaryLight },
+                  ]}
                   onPress={() => setConsultationType(type)}
                 >
-                  <Text style={[styles.chipText, active && styles.chipTextActive]}>{type}</Text>
+                  <Text style={[styles.chipText, { color: colors.textSecondary }, active && { color: colors.primary, fontWeight: '700' }]}>{type}</Text>
                 </TouchableOpacity>
               );
             })}
           </View>
 
           {/* Doctor's Observed Stress Indicator */}
-          <Text style={styles.label}>Clinical Stress Assessment</Text>
+          <Text style={[styles.label, { color: colors.text }]}>Clinical Stress Assessment</Text>
           <View style={styles.indicatorRow}>
             {STRESS_INDICATORS.map((ind) => {
               const active = stressIndicator === ind;
@@ -156,12 +162,13 @@ export default function DoctorReportModal({ visible, onClose, onSaved }: DoctorR
                   key={ind}
                   style={[
                     styles.indicatorBtn,
+                    { backgroundColor: colors.backgroundElement, borderColor: colors.border },
                     active && { borderColor: color, backgroundColor: color + '15' },
                   ]}
                   onPress={() => setStressIndicator(ind)}
                 >
                   <View style={[styles.indicatorDot, { backgroundColor: color }]} />
-                  <Text style={[styles.indicatorText, active && { color, fontWeight: '700' }]}>
+                  <Text style={[styles.indicatorText, { color: colors.textSecondary }, active && { color, fontWeight: '700' }]}>
                     {ind}
                   </Text>
                 </TouchableOpacity>
@@ -170,68 +177,68 @@ export default function DoctorReportModal({ visible, onClose, onSaved }: DoctorR
           </View>
 
           {/* Recommended Rest Days */}
-          <View style={styles.restRow}>
+          <View style={[styles.restRow, { backgroundColor: colors.backgroundElement, borderColor: colors.border }]}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.label}>Recommended Rest / Sick Days</Text>
-              <Text style={styles.sublabel}>Excused duty days for biological recovery</Text>
+              <Text style={[styles.label, { color: colors.text, marginBottom: 2 }]}>Recommended Rest / Sick Days</Text>
+              <Text style={[styles.sublabel, { color: colors.textSecondary }]}>Excused duty days for biological recovery</Text>
             </View>
             <View style={styles.stepperContainer}>
               <TouchableOpacity
-                style={styles.stepBtn}
+                style={[styles.stepBtn, { backgroundColor: isDark ? colors.backgroundTertiary : colors.backgroundSelected }]}
                 onPress={() => setRestDays(Math.max(0, restDays - 1))}
               >
-                <Ionicons name="remove" size={18} color={Colors.light.navy} />
+                <Ionicons name="remove" size={18} color={colors.text} />
               </TouchableOpacity>
-              <Text style={styles.stepValue}>{restDays} d</Text>
+              <Text style={[styles.stepValue, { color: colors.text }]}>{restDays} d</Text>
               <TouchableOpacity
-                style={styles.stepBtn}
+                style={[styles.stepBtn, { backgroundColor: isDark ? colors.backgroundTertiary : colors.backgroundSelected }]}
                 onPress={() => setRestDays(Math.min(14, restDays + 1))}
               >
-                <Ionicons name="add" size={18} color={Colors.light.navy} />
+                <Ionicons name="add" size={18} color={colors.text} />
               </TouchableOpacity>
             </View>
           </View>
 
           {/* Diagnosis & Clinical Notes */}
-          <Text style={styles.label}>Clinical Observations / Diagnosis</Text>
+          <Text style={[styles.label, { color: colors.text }]}>Clinical Observations / Diagnosis</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { backgroundColor: isDark ? colors.backgroundTertiary : colors.backgroundElement, borderColor: colors.border, color: colors.text }]}
             value={diagnosis}
             onChangeText={setDiagnosis}
             placeholder="E.g. Combat fatigue, sleep disruption"
-            placeholderTextColor={Colors.light.textMuted}
+            placeholderTextColor={colors.textMuted}
           />
 
-          <Text style={styles.label}>Doctor's Recommendation & Welfare Notes</Text>
+          <Text style={[styles.label, { color: colors.text }]}>Doctor's Recommendation & Welfare Notes</Text>
           <TextInput
-            style={[styles.input, styles.multilineInput]}
+            style={[styles.input, styles.multilineInput, { backgroundColor: isDark ? colors.backgroundTertiary : colors.backgroundElement, borderColor: colors.border, color: colors.text }]}
             value={clinicalNotes}
             onChangeText={setClinicalNotes}
             multiline
             placeholder="Doctor's notes regarding duty suitability, rest requirements, and psychological state..."
-            placeholderTextColor={Colors.light.textMuted}
+            placeholderTextColor={colors.textMuted}
           />
 
           {/* Simulated File Upload Card */}
-          <Text style={styles.label}>Attached Report Document</Text>
-          <View style={styles.attachmentCard}>
-            <Ionicons name="document-attach" size={24} color={Colors.light.primary} />
+          <Text style={[styles.label, { color: colors.text }]}>Attached Report Document</Text>
+          <View style={[styles.attachmentCard, { backgroundColor: colors.backgroundElement, borderColor: colors.border }]}>
+            <Ionicons name="document-attach" size={24} color={colors.primary} />
             <View style={{ flex: 1, marginLeft: Spacing.three }}>
-              <Text style={styles.attachName}>{fileName}</Text>
-              <Text style={styles.attachSize}>Verified Official Medical Record · 245 KB</Text>
+              <Text style={[styles.attachName, { color: colors.text }]}>{fileName}</Text>
+              <Text style={[styles.attachSize, { color: colors.textSecondary }]}>Verified Official Medical Record · 245 KB</Text>
             </View>
             <TouchableOpacity onPress={() => setFileName('medical_report_' + Date.now().toString().slice(-4) + '.pdf')}>
-              <Ionicons name="sync" size={20} color={Colors.light.textSecondary} />
+              <Ionicons name="sync" size={20} color={colors.textSecondary} />
             </TouchableOpacity>
           </View>
         </ScrollView>
 
         {/* Footer */}
-        <View style={styles.footer}>
-          <TouchableOpacity style={styles.cancelBtn} onPress={onClose}>
-            <Text style={styles.cancelBtnText}>Cancel</Text>
+        <View style={[styles.footer, { backgroundColor: colors.backgroundElement, borderTopColor: colors.border }]}>
+          <TouchableOpacity style={[styles.cancelBtn, { backgroundColor: isDark ? colors.backgroundTertiary : colors.backgroundSelected }]} onPress={onClose}>
+            <Text style={[styles.cancelBtnText, { color: colors.text }]}>Cancel</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.saveBtn} onPress={handleSave} disabled={saving}>
+          <TouchableOpacity style={[styles.saveBtn, { backgroundColor: colors.primary }]} onPress={handleSave} disabled={saving}>
             <Ionicons name="checkmark-done" size={18} color="#FFFFFF" />
             <Text style={styles.saveBtnText}>{saving ? 'Saving...' : 'Save & Analyze'}</Text>
           </TouchableOpacity>

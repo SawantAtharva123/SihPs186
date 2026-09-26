@@ -8,6 +8,7 @@ export const Colors = {
     background: '#F8FAFC',
     backgroundElement: '#FFFFFF',
     backgroundSelected: '#F1F5F9',
+    backgroundTertiary: '#F1F5F9',
     card: '#FFFFFF',
     border: '#E2E8F0',
     borderSubtle: '#F1F5F9',
@@ -46,6 +47,7 @@ export const Colors = {
     background: '#090D16',
     backgroundElement: '#131B2E',
     backgroundSelected: '#1E293B',
+    backgroundTertiary: '#1A2338',
     card: '#131B2E',
     border: '#1E293B',
     borderSubtle: '#172033',
@@ -78,7 +80,7 @@ export const Colors = {
   },
 } as const;
 
-export type ThemeColors = typeof Colors.light;
+export type ThemeColors = Record<keyof typeof Colors.light, string>;
 export type ThemeColor = keyof ThemeColors;
 
 export const Fonts = {

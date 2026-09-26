@@ -11,6 +11,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useSahayak } from '@/context/SahayakContext';
+import { useTheme } from '@/context/ThemeContext';
+import ThemeToggleBtn from '@/components/animations/ThemeToggleBtn';
 import { Colors, Spacing, Radius, Shadow } from '@/constants/theme';
 import { UserRole } from '@/types/sahayak';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -18,15 +20,16 @@ import { logout as authLogout } from '@/services/auth';
 
 export default function Header() {
   const { role, isOffline, setIsOffline, currentUser, setCurrentUser, setRole } = useSahayak();
+  const { colors, isDark } = useTheme();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const router = useRouter();
 
   const getRoleInfo = (r: UserRole) => {
     switch (r) {
-      case 'personnel':        return { title: 'Personnel',      icon: 'person',   color: Colors.light.primary };
-      case 'welfare_officer':  return { title: 'Welfare Officer', icon: 'medical',  color: Colors.light.accent };
-      case 'command_admin':    return { title: 'Command',         icon: 'business', color: Colors.light.stateSustained };
-      default:                 return { title: 'Unknown',         icon: 'help',     color: Colors.light.textSecondary };
+      case 'personnel':        return { title: 'Personnel',      icon: 'person',   color: colors.primary };
+      case 'welfare_officer':  return { title: 'Welfare Officer', icon: 'medical',  color: colors.accent };
+      case 'command_admin':    return { title: 'Command',         icon: 'business', color: colors.stateSustained };
+      default:                 return { title: 'Unknown',         icon: 'help',     color: colors.textSecondary };
     }
   };
 
@@ -37,7 +40,6 @@ export default function Header() {
       await authLogout();
     } catch (_) {}
     setCurrentUser(null);
-    // Reset role to default so next login starts fresh
     setRole('personnel');
     router.replace('/(auth)/login');
   };
@@ -59,31 +61,61 @@ export default function Header() {
 
   return (
     <>
-      <SafeAreaView edges={['top']} style={styles.safeArea}>
+      <SafeAreaView
+        edges={['top']}
+        style={[
+          styles.safeArea,
+          {
+            backgroundColor: colors.backgroundElement,
+            borderBottomColor: colors.border,
+            borderBottomWidth: 1,
+          },
+        ]}
+      >
         <View style={styles.container}>
           {/* Brand */}
           <View style={styles.brandContainer}>
-            <Ionicons name="shield-checkmark" size={24} color={Colors.light.primary} />
-            <Text style={styles.brandText}>SAHAYAK</Text>
+            <Ionicons name="shield-checkmark" size={24} color={colors.primary} />
+            <Text style={[styles.brandText, { color: isDark ? '#FFFFFF' : colors.navy }]}>
+              SAHAYAK
+            </Text>
           </View>
 
           {/* Controls */}
           <View style={styles.controls}>
+            {/* Dark / Light Mode Toggle */}
+            <ThemeToggleBtn />
+
             {/* Offline Toggle */}
             <TouchableOpacity
-              style={[styles.offlineToggle, isOffline && styles.offlineToggleActive]}
+              style={[
+                styles.offlineToggle,
+                { backgroundColor: isDark ? '#1E293B' : colors.background },
+                isOffline && { backgroundColor: colors.warningBg },
+              ]}
               onPress={() => setIsOffline(!isOffline)}
             >
               <Ionicons
                 name={isOffline ? 'cloud-offline' : 'cloud-done'}
                 size={16}
-                color={isOffline ? Colors.light.warning : Colors.light.success}
+                color={isOffline ? colors.warning : colors.success}
               />
-              {isOffline && <Text style={styles.offlineText}>Offline</Text>}
+              {isOffline && (
+                <Text style={[styles.offlineText, { color: colors.warning }]}>Offline</Text>
+              )}
             </TouchableOpacity>
 
-            {/* Static Role Badge — no interaction */}
-            <View style={styles.roleBadge}>
+            {/* Static Role Badge */}
+            <View
+              style={[
+                styles.roleBadge,
+                {
+                  backgroundColor: isDark ? '#1E293B' : colors.backgroundSelected,
+                  borderColor: isDark ? '#334155' : colors.border,
+                  borderWidth: 1,
+                },
+              ]}
+            >
               <Ionicons name={currentRoleInfo.icon as any} size={14} color={currentRoleInfo.color} />
               <Text style={[styles.roleText, { color: currentRoleInfo.color }]}>
                 {currentRoleInfo.title}
@@ -92,14 +124,14 @@ export default function Header() {
 
             {/* Logout Button */}
             <TouchableOpacity style={styles.logoutBtn} onPress={confirmLogout}>
-              <Ionicons name="log-out-outline" size={22} color={Colors.light.stateSustained} />
+              <Ionicons name="log-out-outline" size={22} color={colors.stateSustained} />
             </TouchableOpacity>
           </View>
         </View>
 
         {isOffline && (
-          <View style={styles.offlineBanner}>
-            <Text style={styles.offlineBannerText}>
+          <View style={[styles.offlineBanner, { backgroundColor: colors.warningBg }]}>
+            <Text style={[styles.offlineBannerText, { color: colors.warning }]}>
               You are currently offline. Changes are saved locally and will sync when reconnected.
             </Text>
           </View>

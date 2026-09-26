@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import { Colors, Spacing, Radius, Shadow } from '@/constants/theme';
@@ -7,9 +7,13 @@ import { LineChart } from 'react-native-gifted-charts';
 import { analyzeBaseline } from '@/services/analyticsClient';
 import { useTrends } from '@/hooks/useTrends';
 import { useSahayak } from '@/context/SahayakContext';
+import { useTheme } from '@/context/ThemeContext';
+import { FadeInView } from '@/components/animations/FadeInView';
+import { BouncyPressable } from '@/components/animations/BouncyPressable';
 
 export default function TrendsScreen() {
   const { currentUser } = useSahayak();
+  const { colors, isDark } = useTheme();
   const personId = currentUser?.id ?? 'person-001';
 
   const { sleepTrend, recoveryTrend, dutyTrend, reactionTrend, loading, loadTrends } = useTrends();
@@ -95,144 +99,180 @@ export default function TrendsScreen() {
   const chartData = getActiveChartData();
   const activeColor =
     selectedMetric === 'reaction'
-      ? Colors.light.warning
+      ? colors.warning
       : selectedMetric === 'recovery'
-      ? Colors.light.success
-      : Colors.light.navy;
+      ? colors.success
+      : colors.primary;
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.headerTitle}>Longitudinal Trends & Baselines</Text>
-      <Text style={styles.headerSubtitle}>
-        Learning your individual operating baseline over time
-      </Text>
+    <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={styles.content}>
+      <FadeInView delay={50}>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Longitudinal Trends & Baselines</Text>
+        <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>
+          Learning your individual operating baseline over time
+        </Text>
+      </FadeInView>
 
       {/* Metric Selector Tabs */}
-      <View style={styles.tabsContainer}>
-        <TouchableOpacity
-          style={[styles.tabBtn, selectedMetric === 'sleep' && styles.tabBtnActive]}
-          onPress={() => setSelectedMetric('sleep')}
-        >
-          <Ionicons
-            name="moon"
-            size={16}
-            color={selectedMetric === 'sleep' ? Colors.light.primary : Colors.light.textSecondary}
-          />
-          <Text style={[styles.tabText, selectedMetric === 'sleep' && styles.tabTextActive]}>
-            Sleep (Hours)
-          </Text>
-        </TouchableOpacity>
+      <FadeInView delay={100}>
+        <View style={styles.tabsContainer}>
+          <BouncyPressable
+            style={[
+              styles.tabBtn,
+              { backgroundColor: colors.backgroundElement, borderColor: colors.border },
+              selectedMetric === 'sleep' && { borderColor: colors.primary, backgroundColor: isDark ? 'rgba(74, 144, 226, 0.15)' : colors.primaryLight },
+            ]}
+            onPress={() => setSelectedMetric('sleep')}
+          >
+            <Ionicons
+              name="moon"
+              size={16}
+              color={selectedMetric === 'sleep' ? colors.primary : colors.textSecondary}
+            />
+            <Text
+              style={[
+                styles.tabText,
+                { color: colors.textSecondary },
+                selectedMetric === 'sleep' && { color: colors.primary, fontWeight: '700' },
+              ]}
+            >
+              Sleep (Hours)
+            </Text>
+          </BouncyPressable>
 
-        <TouchableOpacity
-          style={[styles.tabBtn, selectedMetric === 'reaction' && styles.tabBtnActive]}
-          onPress={() => setSelectedMetric('reaction')}
-        >
-          <Ionicons
-            name="flash"
-            size={16}
-            color={selectedMetric === 'reaction' ? Colors.light.warning : Colors.light.textSecondary}
-          />
-          <Text style={[styles.tabText, selectedMetric === 'reaction' && styles.tabTextActive]}>
-            Reaction (ms)
-          </Text>
-        </TouchableOpacity>
+          <BouncyPressable
+            style={[
+              styles.tabBtn,
+              { backgroundColor: colors.backgroundElement, borderColor: colors.border },
+              selectedMetric === 'reaction' && { borderColor: colors.warning, backgroundColor: isDark ? 'rgba(230, 126, 34, 0.15)' : '#FFF8E6' },
+            ]}
+            onPress={() => setSelectedMetric('reaction')}
+          >
+            <Ionicons
+              name="flash"
+              size={16}
+              color={selectedMetric === 'reaction' ? colors.warning : colors.textSecondary}
+            />
+            <Text
+              style={[
+                styles.tabText,
+                { color: colors.textSecondary },
+                selectedMetric === 'reaction' && { color: colors.warning, fontWeight: '700' },
+              ]}
+            >
+              Reaction (ms)
+            </Text>
+          </BouncyPressable>
 
-        <TouchableOpacity
-          style={[styles.tabBtn, selectedMetric === 'recovery' && styles.tabBtnActive]}
-          onPress={() => setSelectedMetric('recovery')}
-        >
-          <Ionicons
-            name="battery-charging"
-            size={16}
-            color={selectedMetric === 'recovery' ? Colors.light.success : Colors.light.textSecondary}
-          />
-          <Text style={[styles.tabText, selectedMetric === 'recovery' && styles.tabTextActive]}>
-            Recovery
-          </Text>
-        </TouchableOpacity>
-      </View>
+          <BouncyPressable
+            style={[
+              styles.tabBtn,
+              { backgroundColor: colors.backgroundElement, borderColor: colors.border },
+              selectedMetric === 'recovery' && { borderColor: colors.success, backgroundColor: isDark ? 'rgba(46, 204, 113, 0.15)' : '#EBF9F1' },
+            ]}
+            onPress={() => setSelectedMetric('recovery')}
+          >
+            <Ionicons
+              name="battery-charging"
+              size={16}
+              color={selectedMetric === 'recovery' ? colors.success : colors.textSecondary}
+            />
+            <Text
+              style={[
+                styles.tabText,
+                { color: colors.textSecondary },
+                selectedMetric === 'recovery' && { color: colors.success, fontWeight: '700' },
+              ]}
+            >
+              Recovery
+            </Text>
+          </BouncyPressable>
+        </View>
+      </FadeInView>
 
       {/* Chart Card */}
-      <View style={styles.chartCard}>
-        <View style={styles.cardHeader}>
-          <Ionicons name="analytics" size={20} color={Colors.light.primary} />
-          <Text style={styles.cardTitle}>
-            {selectedMetric === 'sleep'
-              ? 'SLEEP DURATION (HOURS) VS PERSONAL BASELINE'
-              : selectedMetric === 'reaction'
-              ? 'COGNITIVE REACTION TIME (MS)'
-              : 'RECOVERY CAPACITY TRAJECTORY'}
-          </Text>
+      <FadeInView delay={150}>
+        <View style={[styles.chartCard, { backgroundColor: colors.backgroundElement, borderColor: colors.border }]}>
+          <View style={styles.cardHeader}>
+            <Ionicons name="analytics" size={20} color={colors.primary} />
+            <Text style={[styles.cardTitle, { color: colors.text }]}>
+              {selectedMetric === 'sleep'
+                ? 'SLEEP DURATION (HOURS) VS PERSONAL BASELINE'
+                : selectedMetric === 'reaction'
+                ? 'COGNITIVE REACTION TIME (MS)'
+                : 'RECOVERY CAPACITY TRAJECTORY'}
+            </Text>
+          </View>
+
+          {loading ? (
+            <ActivityIndicator size="large" color={colors.primary} style={{ marginVertical: 40 }} />
+          ) : (
+            <>
+              <View style={{ marginBottom: 15, paddingRight: 10 }}>
+                <LineChart
+                  data={chartData}
+                  height={180}
+                  spacing={32}
+                  initialSpacing={15}
+                  color={activeColor}
+                  thickness={3}
+                  dataPointsColor={activeColor}
+                  dataPointsRadius={4}
+                  noOfSections={4}
+                  yAxisColor={colors.border}
+                  yAxisThickness={1}
+                  rulesType="solid"
+                  rulesColor={isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)'}
+                  yAxisTextStyle={{ color: colors.textSecondary, fontSize: 10 }}
+                  xAxisColor={colors.border}
+                  showValuesAsDataPointsText
+                  textColor={colors.text}
+                  textFontSize={10}
+                />
+              </View>
+
+              {/* ML Baseline Stats */}
+              {selectedMetric === 'sleep' && baselineData && (
+                <View style={[styles.mlResultsBox, { backgroundColor: isDark ? colors.backgroundTertiary : '#F8FAFC', borderColor: colors.border }]}>
+                  <View style={styles.mlHeader}>
+                    <Ionicons name="shield-checkmark" size={16} color={colors.primary} />
+                    <Text style={[styles.mlResultTitle, { color: colors.text }]}>ML Robust Baseline (Median + MAD + EWMA)</Text>
+                  </View>
+                  <View style={styles.statsRow}>
+                    <View style={styles.statBox}>
+                      <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Median Normal</Text>
+                      <Text style={[styles.statVal, { color: colors.text }]}>{baselineData.median?.toFixed(1) ?? '7.2'} hrs</Text>
+                    </View>
+                    <View style={styles.statBox}>
+                      <Text style={[styles.statLabel, { color: colors.textSecondary }]}>MAD Dispersion</Text>
+                      <Text style={[styles.statVal, { color: colors.text }]}>±{baselineData.mad?.toFixed(1) ?? '0.8'}h</Text>
+                    </View>
+                    <View style={styles.statBox}>
+                      <Text style={[styles.statLabel, { color: colors.textSecondary }]}>EWMA Trend</Text>
+                      <Text style={[styles.statVal, { color: colors.text }]}>{baselineData.ewma?.toFixed(1) ?? '6.9'} hrs</Text>
+                    </View>
+                  </View>
+                  <Text style={[styles.mlNote, { color: colors.textSecondary, borderTopColor: colors.border }]}>
+                    Deviation threshold: Values &lt; {(baselineData.median - 1.5 * baselineData.mad)?.toFixed(1) ?? '5.5'}h flag an acute sleep recovery deficit.
+                  </Text>
+                </View>
+              )}
+
+              {selectedMetric === 'reaction' && (
+                <View style={[styles.mlResultsBox, { backgroundColor: isDark ? colors.backgroundTertiary : '#F8FAFC', borderColor: colors.border }]}>
+                  <View style={styles.mlHeader}>
+                    <Ionicons name="flash" size={16} color={colors.warning} />
+                    <Text style={[styles.mlResultTitle, { color: colors.text }]}>Functional Micro-Task Signal</Text>
+                  </View>
+                  <Text style={[styles.mlNote, { color: colors.textSecondary, borderTopColor: colors.border }]}>
+                    Tracks motor speed and inhibitory lapses from voluntary cognitive mini-games. Persistent reaction lags &gt; 520ms correlate with operational fatigue and sleep deficits.
+                  </Text>
+                </View>
+              )}
+            </>
+          )}
         </View>
-
-        {loading ? (
-          <ActivityIndicator size="large" color={Colors.light.navy} style={{ marginVertical: 40 }} />
-        ) : (
-          <>
-            <View style={{ marginBottom: 15, paddingRight: 10 }}>
-              <LineChart
-                data={chartData}
-                height={180}
-                spacing={32}
-                initialSpacing={15}
-                color={activeColor}
-                thickness={3}
-                dataPointsColor={activeColor}
-                dataPointsRadius={4}
-                noOfSections={4}
-                yAxisColor={Colors.light.border}
-                yAxisThickness={1}
-                rulesType="solid"
-                rulesColor="rgba(0,0,0,0.06)"
-                yAxisTextStyle={{ color: Colors.light.textSecondary, fontSize: 10 }}
-                xAxisColor={Colors.light.border}
-                showValuesAsDataPointsText
-                textColor={Colors.light.navy}
-                textFontSize={10}
-              />
-            </View>
-
-            {/* ML Baseline Stats */}
-            {selectedMetric === 'sleep' && baselineData && (
-              <View style={styles.mlResultsBox}>
-                <View style={styles.mlHeader}>
-                  <Ionicons name="shield-checkmark" size={16} color={Colors.light.primary} />
-                  <Text style={styles.mlResultTitle}>ML Robust Baseline (Median + MAD + EWMA)</Text>
-                </View>
-                <View style={styles.statsRow}>
-                  <View style={styles.statBox}>
-                    <Text style={styles.statLabel}>Median Normal</Text>
-                    <Text style={styles.statVal}>{baselineData.median?.toFixed(1) ?? '7.2'} hrs</Text>
-                  </View>
-                  <View style={styles.statBox}>
-                    <Text style={styles.statLabel}>MAD Dispersion</Text>
-                    <Text style={styles.statVal}>±{baselineData.mad?.toFixed(1) ?? '0.8'}h</Text>
-                  </View>
-                  <View style={styles.statBox}>
-                    <Text style={styles.statLabel}>EWMA Trend</Text>
-                    <Text style={styles.statVal}>{baselineData.ewma?.toFixed(1) ?? '6.9'} hrs</Text>
-                  </View>
-                </View>
-                <Text style={styles.mlNote}>
-                  Deviation threshold: Values &lt; {(baselineData.median - 1.5 * baselineData.mad)?.toFixed(1) ?? '5.5'}h flag an acute sleep recovery deficit.
-                </Text>
-              </View>
-            )}
-
-            {selectedMetric === 'reaction' && (
-              <View style={styles.mlResultsBox}>
-                <View style={styles.mlHeader}>
-                  <Ionicons name="flash" size={16} color={Colors.light.warning} />
-                  <Text style={styles.mlResultTitle}>Functional Micro-Task Signal</Text>
-                </View>
-                <Text style={styles.mlNote}>
-                  Tracks motor speed and inhibitory lapses from voluntary cognitive mini-games. Persistent reaction lags &gt; 520ms correlate with operational fatigue and sleep deficits.
-                </Text>
-              </View>
-            )}
-          </>
-        )}
-      </View>
+      </FadeInView>
     </ScrollView>
   );
 }
@@ -240,7 +280,6 @@ export default function TrendsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.light.background,
   },
   content: {
     padding: Spacing.four,
@@ -249,11 +288,9 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 22,
     fontWeight: '800',
-    color: Colors.light.navy,
   },
   headerSubtitle: {
     fontSize: 13,
-    color: Colors.light.textSecondary,
     marginTop: 2,
     marginBottom: Spacing.four,
   },
@@ -270,29 +307,16 @@ const styles = StyleSheet.create({
     gap: 4,
     paddingVertical: Spacing.three,
     borderRadius: Radius.lg,
-    backgroundColor: Colors.light.backgroundElement,
     borderWidth: 1,
-    borderColor: Colors.light.border,
-  },
-  tabBtnActive: {
-    borderColor: Colors.light.primary,
-    backgroundColor: Colors.light.primaryLight,
   },
   tabText: {
     fontSize: 12,
     fontWeight: '600',
-    color: Colors.light.textSecondary,
-  },
-  tabTextActive: {
-    color: Colors.light.primaryHover,
-    fontWeight: '700',
   },
   chartCard: {
-    backgroundColor: Colors.light.backgroundElement,
     borderRadius: Radius.xl,
     padding: Spacing.four,
     borderWidth: 1,
-    borderColor: Colors.light.border,
     ...Shadow.sm,
   },
   cardHeader: {
@@ -304,16 +328,13 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 12,
     fontWeight: '800',
-    color: Colors.light.navy,
     letterSpacing: 0.5,
   },
   mlResultsBox: {
-    backgroundColor: '#F8FAFC',
     borderRadius: Radius.lg,
     padding: Spacing.three,
     marginTop: Spacing.two,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
   },
   mlHeader: {
     flexDirection: 'row',
@@ -324,7 +345,6 @@ const styles = StyleSheet.create({
   mlResultTitle: {
     fontSize: 12,
     fontWeight: '800',
-    color: Colors.light.navy,
   },
   statsRow: {
     flexDirection: 'row',
@@ -337,21 +357,17 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontSize: 10,
-    color: Colors.light.textSecondary,
     fontWeight: '600',
   },
   statVal: {
     fontSize: 14,
     fontWeight: '800',
-    color: Colors.light.navy,
     marginTop: 2,
   },
   mlNote: {
     fontSize: 11,
-    color: Colors.light.textSecondary,
     lineHeight: 16,
     borderTopWidth: 1,
-    borderTopColor: '#E2E8F0',
     paddingTop: Spacing.two,
   },
 });

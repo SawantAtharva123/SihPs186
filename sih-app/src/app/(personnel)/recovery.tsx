@@ -1,11 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, Spacing, Radius } from '@/constants/theme';
+import { Spacing, Radius } from '@/constants/theme';
 import { BarChart } from 'react-native-gifted-charts';
 import { analyzeRecovery, getRecommendations } from '@/services/analyticsClient';
+import { useTheme } from '@/context/ThemeContext';
+import { FadeInView } from '@/components/animations/FadeInView';
+import { BouncyPressable } from '@/components/animations/BouncyPressable';
 
 export default function RecoveryScreen() {
+  const { colors, isDark } = useTheme();
   const [loading, setLoading] = useState(true);
   const [recoveryData, setRecoveryData] = useState<any>(null);
   const [recommendations, setRecommendations] = useState<any>(null);
@@ -37,93 +41,164 @@ export default function RecoveryScreen() {
   }, []);
 
   const barData = [
-    { value: 5, label: 'Mon', frontColor: Colors.light.stateStable },
-    { value: 8, label: 'Tue', frontColor: Colors.light.stateEmerging },
-    { value: 12, label: 'Wed', frontColor: Colors.light.stateSustained },
+    { value: 5, label: 'Mon', frontColor: colors.stateStable },
+    { value: 8, label: 'Tue', frontColor: colors.stateEmerging },
+    { value: 12, label: 'Wed', frontColor: colors.stateSustained },
   ];
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.headerTitle}>Recovery Engine</Text>
+    <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={styles.content}>
+      <FadeInView delay={50}>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Recovery Engine</Text>
+        <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>
+          Algorithmic rest recommendations & recovery debt half-life
+        </Text>
+      </FadeInView>
 
       {/* Recovery Debt Chart */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>RECOVERY DEBT (ML MODEL)</Text>
-        <View style={{ marginBottom: 20 }}>
-          <BarChart
-            data={barData}
-            barWidth={30}
-            spacing={40}
-            roundedTop
-            roundedBottom
-            xAxisThickness={0}
-            yAxisThickness={0}
-            yAxisTextStyle={{ color: 'gray' }}
-            noOfSections={3}
-          />
-        </View>
-
-        {loading ? (
-          <ActivityIndicator size="small" color={Colors.light.navy} />
-        ) : (
-          <View style={styles.mlBox}>
-            <Text style={styles.mlResultTitle}>ML Recovery Estimates</Text>
-            {recoveryData?.recovery_debt !== undefined && (
-              <Text style={styles.mlResultText}>Current Debt: {recoveryData.recovery_debt}</Text>
-            )}
-            {recoveryData?.estimated_half_life !== undefined && (
-              <Text style={styles.mlResultText}>Estimated Half-Life: {recoveryData.estimated_half_life} Days</Text>
-            )}
-            {recoveryData?.trajectory !== undefined && (
-              <Text style={styles.mlResultText}>Trajectory: {recoveryData.trajectory}</Text>
-            )}
+      <FadeInView delay={100}>
+        <View style={[styles.card, { backgroundColor: colors.backgroundElement, borderColor: colors.border }]}>
+          <View style={styles.cardHeader}>
+            <Ionicons name="battery-charging" size={18} color={colors.primary} />
+            <Text style={[styles.cardTitle, { color: colors.text }]}>RECOVERY DEBT (ML MODEL)</Text>
           </View>
-        )}
-      </View>
+          <View style={{ marginBottom: 20 }}>
+            <BarChart
+              data={barData}
+              barWidth={32}
+              spacing={40}
+              roundedTop
+              roundedBottom
+              xAxisThickness={0}
+              yAxisThickness={0}
+              yAxisTextStyle={{ color: colors.textSecondary, fontSize: 11 }}
+              xAxisLabelTextStyle={{ color: colors.textSecondary, fontSize: 12, fontWeight: '600' }}
+              noOfSections={3}
+            />
+          </View>
+
+          {loading ? (
+            <ActivityIndicator size="small" color={colors.primary} />
+          ) : (
+            <View style={[styles.mlBox, { backgroundColor: isDark ? colors.backgroundTertiary : '#F8FAFC', borderColor: colors.border }]}>
+              <View style={styles.mlBoxHeader}>
+                <Ionicons name="shield-checkmark" size={16} color={colors.primary} />
+                <Text style={[styles.mlResultTitle, { color: colors.text }]}>ML Recovery Estimates</Text>
+              </View>
+              {recoveryData?.recovery_debt !== undefined && (
+                <Text style={[styles.mlResultText, { color: colors.textSecondary }]}>Current Debt: <Text style={{ color: colors.text, fontWeight: '700' }}>{recoveryData.recovery_debt}</Text></Text>
+              )}
+              {recoveryData?.estimated_half_life !== undefined && (
+                <Text style={[styles.mlResultText, { color: colors.textSecondary }]}>Estimated Half-Life: <Text style={{ color: colors.text, fontWeight: '700' }}>{recoveryData.estimated_half_life} Days</Text></Text>
+              )}
+              {recoveryData?.trajectory !== undefined && (
+                <Text style={[styles.mlResultText, { color: colors.textSecondary }]}>Trajectory: <Text style={{ color: colors.text, fontWeight: '700' }}>{recoveryData.trajectory}</Text></Text>
+              )}
+            </View>
+          )}
+        </View>
+      </FadeInView>
 
       {/* Recommendations */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>RECOMMENDED INTERVENTIONS</Text>
-        {loading ? (
-          <ActivityIndicator size="small" color={Colors.light.navy} />
-        ) : recommendations?.recommendations?.length > 0 ? (
-          recommendations.recommendations.map((rec: any, idx: number) => (
-            <View key={idx} style={styles.recItem}>
-              <Ionicons name="bulb-outline" size={20} color={Colors.light.navy} />
-              <View style={styles.recContent}>
-                <Text style={styles.recTitle}>{rec.title || 'Suggestion'}</Text>
-                <Text style={styles.recDesc}>{rec.description || rec}</Text>
-              </View>
-            </View>
-          ))
-        ) : (
-          <View style={styles.recItem}>
-            <Ionicons name="bulb-outline" size={20} color={Colors.light.navy} />
-            <View style={styles.recContent}>
-              <Text style={styles.recTitle}>Restful Sleep</Text>
-              <Text style={styles.recDesc}>Prioritize 8+ hours of uninterrupted sleep for 2 days to clear current recovery debt.</Text>
-            </View>
+      <FadeInView delay={150}>
+        <View style={[styles.card, { backgroundColor: colors.backgroundElement, borderColor: colors.border }]}>
+          <View style={styles.cardHeader}>
+            <Ionicons name="bulb" size={18} color={colors.warning} />
+            <Text style={[styles.cardTitle, { color: colors.text }]}>RECOMMENDED INTERVENTIONS</Text>
           </View>
-        )}
-      </View>
+          {loading ? (
+            <ActivityIndicator size="small" color={colors.primary} />
+          ) : recommendations?.recommendations?.length > 0 ? (
+            recommendations.recommendations.map((rec: any, idx: number) => (
+              <BouncyPressable key={idx} style={[styles.recItem, { backgroundColor: isDark ? colors.backgroundTertiary : '#F8FAFC', borderColor: colors.border }]}>
+                <View style={[styles.recIconCircle, { backgroundColor: isDark ? 'rgba(74, 144, 226, 0.15)' : colors.primaryLight }]}>
+                  <Ionicons name="bulb-outline" size={20} color={colors.primary} />
+                </View>
+                <View style={styles.recContent}>
+                  <Text style={[styles.recTitle, { color: colors.text }]}>{rec.title || 'Suggestion'}</Text>
+                  <Text style={[styles.recDesc, { color: colors.textSecondary }]}>{rec.description || rec}</Text>
+                </View>
+              </BouncyPressable>
+            ))
+          ) : (
+            <BouncyPressable style={[styles.recItem, { backgroundColor: isDark ? colors.backgroundTertiary : '#F8FAFC', borderColor: colors.border }]}>
+              <View style={[styles.recIconCircle, { backgroundColor: isDark ? 'rgba(74, 144, 226, 0.15)' : colors.primaryLight }]}>
+                <Ionicons name="moon-outline" size={20} color={colors.primary} />
+              </View>
+              <View style={styles.recContent}>
+                <Text style={[styles.recTitle, { color: colors.text }]}>Restful Sleep</Text>
+                <Text style={[styles.recDesc, { color: colors.textSecondary }]}>Prioritize 8+ hours of uninterrupted sleep for 2 days to clear current recovery debt.</Text>
+              </View>
+            </BouncyPressable>
+          )}
+        </View>
+      </FadeInView>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.light.background },
+  container: { flex: 1 },
   content: { padding: Spacing.four, paddingBottom: 100 },
-  headerTitle: { fontSize: 24, fontWeight: 'bold', color: Colors.light.navy, marginBottom: Spacing.four },
+  headerTitle: { fontSize: 24, fontWeight: '800' },
+  headerSubtitle: { fontSize: 13, marginTop: 2, marginBottom: Spacing.four },
   
-  card: { backgroundColor: '#ffffff', padding: Spacing.four, borderRadius: Radius.lg, marginBottom: Spacing.six, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 2 },
-  cardTitle: { fontSize: 13, fontWeight: 'bold', color: Colors.light.navy, letterSpacing: 0.5, marginBottom: Spacing.four },
+  card: {
+    padding: Spacing.four,
+    borderRadius: Radius.lg,
+    marginBottom: Spacing.six,
+    borderWidth: 1,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+    marginBottom: Spacing.four,
+  },
+  cardTitle: {
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
 
-  mlBox: { backgroundColor: Colors.light.backgroundElement, padding: 12, borderRadius: 8, marginTop: 10, borderWidth: 1, borderColor: Colors.light.borderSubtle },
-  mlResultTitle: { fontWeight: 'bold', marginBottom: 4, color: Colors.light.navy, fontSize: 15 },
-  mlResultText: { color: Colors.light.textSecondary, marginBottom: 2, fontSize: 14 },
+  mlBox: {
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 10,
+    borderWidth: 1,
+  },
+  mlBoxHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 6,
+  },
+  mlResultTitle: {
+    fontWeight: '800',
+    fontSize: 14,
+  },
+  mlResultText: {
+    marginBottom: 4,
+    fontSize: 13,
+  },
 
-  recItem: { flexDirection: 'row', gap: Spacing.three, backgroundColor: Colors.light.backgroundElement, padding: Spacing.three, borderRadius: Radius.md, marginBottom: Spacing.three },
+  recItem: {
+    flexDirection: 'row',
+    gap: Spacing.three,
+    padding: Spacing.three,
+    borderRadius: Radius.md,
+    marginBottom: Spacing.three,
+    borderWidth: 1,
+    alignItems: 'center',
+  },
+  recIconCircle: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   recContent: { flex: 1 },
-  recTitle: { fontSize: 15, fontWeight: 'bold', color: Colors.light.text, marginBottom: 2 },
-  recDesc: { fontSize: 13, color: Colors.light.textSecondary, lineHeight: 18 },
+  recTitle: { fontSize: 14, fontWeight: '700', marginBottom: 2 },
+  recDesc: { fontSize: 12, lineHeight: 17 },
 });

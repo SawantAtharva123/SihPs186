@@ -1,67 +1,88 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
+import { Platform } from 'react-native';
 
 export default function PersonnelLayout() {
+  const { colors, isDark } = useTheme();
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: Colors.light.primary,
-        tabBarInactiveTintColor: Colors.light.textMuted,
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textMuted,
         tabBarStyle: {
-          backgroundColor: Colors.light.backgroundElement,
-          borderTopColor: Colors.light.border,
+          backgroundColor: colors.backgroundElement,
+          borderTopColor: colors.border,
+          height: Platform.OS === 'ios' ? 84 : 64,
+          paddingBottom: Platform.OS === 'ios' ? 24 : 8,
+          paddingTop: 6,
+        },
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: '600',
         },
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <Ionicons name="home" size={24} color={color} />,
+          title: 'Dashboard',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? 'home' : 'home-outline'} size={22} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="activities"
         options={{
           title: 'Activities',
-          tabBarIcon: ({ color }) => <Ionicons name="game-controller" size={24} color={color} />,
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? 'game-controller' : 'game-controller-outline'} size={22} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="trends"
         options={{
           title: 'Trends',
-          tabBarIcon: ({ color }) => <Ionicons name="analytics" size={24} color={color} />,
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? 'analytics' : 'analytics-outline'} size={22} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="recovery"
         options={{
           title: 'Recovery',
-          tabBarIcon: ({ color }) => <Ionicons name="battery-charging" size={24} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="pulse"
-        options={{
-          title: 'Unit Pulse',
-          tabBarIcon: ({ color }) => <Ionicons name="pulse" size={24} color={color} />,
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? 'battery-charging' : 'battery-charging-outline'} size={22} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="support"
         options={{
           title: 'Support',
-          tabBarIcon: ({ color }) => <Ionicons name="medkit" size={24} color={color} />,
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? 'medkit' : 'medkit-outline'} size={22} color={color} />
+          ),
+        }}
+      />
+      {/* Secondary screens accessible from Dashboard & direct navigation */}
+      <Tabs.Screen
+        name="pulse"
+        options={{
+          href: null,
+          title: 'Unit Pulse',
         }}
       />
       <Tabs.Screen
         name="privacy"
         options={{
-          title: 'Privacy',
-          tabBarIcon: ({ color }) => <Ionicons name="shield-half" size={24} color={color} />,
+          href: null,
+          title: 'Data Sovereignty',
         }}
       />
     </Tabs>
