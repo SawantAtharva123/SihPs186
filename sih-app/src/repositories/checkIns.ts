@@ -11,9 +11,29 @@ export async function insertCheckIn(data: Omit<DailyCheckInRecord, 'id' | 'syncS
   await db.runAsync(
     `INSERT INTO check_ins (id, client_id, person_id, date, sleep_compared, workload_compared, energy_level, recovery_feeling, note, created_at, updated_at, sync_status, sync_attempts, device_timestamp)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 0, ?)`,
-    [id, clientId, personId, data.date, data.sleepCompared, data.workloadCompared, data.energyLevel, data.recoveryFeeling, data.note ?? null, now, now, now]
+    [id, clientId, personId, data.date, data.sleepCompared ?? `${data.sleepHours}h`, data.workloadCompared, data.energyLevel, data.recoveryFeeling, data.note ?? null, now, now, now]
+  );
+
+  // Directly insert exact sleep duration in hours to sleep_records table!
+  const sleepId = Math.random().toString(36).substring(2);
+  await db.runAsync(
+    `INSERT OR REPLACE INTO sleep_records (id, client_id, person_id, date, duration_hours, quality, notes, created_at, updated_at, sync_status, sync_attempts, device_timestamp)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 0, ?)`,
+    [
+      sleepId,
+      sleepId,
+      personId,
+      data.date,
+      data.sleepHours,
+      data.sleepHours >= 7 ? 'Good' : data.sleepHours >= 5.5 ? 'Fair' : 'Poor',
+      data.note ?? null,
+      now,
+      now,
+      now,
+    ]
   );
   await enqueue('check_ins', id, 'INSERT', { id, person_id: personId, ...data });
+  await enqueue('sleep_records', sleepId, 'INSERT', { id: sleepId, person_id: personId, date: data.date, duration_hours: data.sleepHours });
   return id;
 }
 

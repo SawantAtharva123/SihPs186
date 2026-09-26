@@ -118,3 +118,81 @@ class InterventionRequest(BaseModel):
 class RecommendRequest(BaseModel):
     subject_id: str = "anonymous"
     bundle: dict[str, Any] = Field(default_factory=dict)
+
+
+class ArchetypeRequest(BaseModel):
+    person_id: str = "anonymous"
+    days: list[DayInputs] = Field(default_factory=list)
+    half_life_hours: Optional[float] = None
+    volatility_score: Optional[float] = None
+    baselines: dict[str, Optional[float]] = Field(default_factory=dict)
+
+
+class DoctorReportData(BaseModel):
+    consultations_count: int = 0
+    sick_leave_days: float = 0.0
+    prior_counseling_sessions: int = 0
+    disciplinary_incidents: int = 0
+    absenteeism_rate_pct: float = 0.0
+    doctor_stress_indicator: Optional[str] = "Normal"
+    recommended_rest_days: float = 0.0
+    fit_for_duty: bool = True
+    clinical_notes: Optional[str] = None
+    doctor_name: Optional[str] = None
+    facility: Optional[str] = None
+    consultation_date: Optional[str] = None
+
+
+class MiniGameData(BaseModel):
+    avg_reaction_time_ms: Optional[float] = 460.0
+    reaction_time_std_ms: Optional[float] = 40.0
+    accuracy: Optional[float] = 0.88
+    missed_targets: Optional[float] = 1.0
+    false_taps: Optional[float] = 1.0
+    sessions_count: Optional[int] = 1
+    recent_activity_types: Optional[list[str]] = None
+
+
+class SelfAssessmentData(BaseModel):
+    sleep_hours: float = 7.0  # Exact sleep duration in hours!
+    sleep_quality_score: Optional[float] = None
+    energy_level: Optional[float] = 6.5
+    mood_level: Optional[float] = 6.5
+    recovery_level: Optional[float] = 6.5
+    self_reported_stress: Optional[str] = "Medium"
+    workload_compared: Optional[str] = "Usual"
+    wellness_survey_score: Optional[float] = 6.0
+    peer_support_score: Optional[float] = 6.5
+    financial_stress_level: Optional[str] = "Moderate"
+    note: Optional[str] = None
+
+
+class OperationalContextData(BaseModel):
+    duty_hours_per_week: Optional[float] = 48.0
+    night_shifts_per_month: Optional[float] = 6.0
+    workload_index: Optional[float] = 0.5
+    combat_exposure_incidents: Optional[float] = 0.0
+    family_separation_months: Optional[float] = 4.0
+
+
+class MultiModalStressRequest(BaseModel):
+    person_id: str = "person-001"
+    doctor_reports: Optional[DoctorReportData] = None
+    mini_games: Optional[MiniGameData] = None
+    self_assessment: Optional[SelfAssessmentData] = None
+    operational_context: Optional[OperationalContextData] = None
+
+
+class MedicalReportUploadRequest(BaseModel):
+    person_id: str = "person-001"
+    doctor_name: str
+    facility: Optional[str] = "Base Hospital"
+    consultation_date: str
+    consultation_type: str = "Routine"
+    diagnosis: Optional[str] = None
+    clinical_notes: Optional[str] = None
+    doctor_stress_indicator: str = "Normal"
+    recommended_rest_days: int = 0
+    fit_for_duty: bool = True
+    file_name: Optional[str] = None
+

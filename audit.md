@@ -17,14 +17,24 @@
 - `recommendations/welfare.py` ✅
 - `data/synthetic.py` ✅
 - `models/registry.py` ✅
+- `stress_assessment/trainer.py` — Multi-modal LightGBM trainer on 10,000 personnel & 80,000 observations ✅
+- `stress_assessment/engine.py` — Asymmetric Bayes risk minimization (loss matrix up to 22x) + hard safety floors + signal agreement ✅
+- `models/stress_model_bundle.joblib` — Trained model artifact (93.8% critical recall, zero undercounting bias) ✅
+- `app/routes.py` — Added `/api/v1/stress/predict`, `/api/v1/medical/report-analyze`, `/api/v1/stress/model-info` ✅
+- `app/schemas.py` — Added MultiModalStressRequest, DoctorReportData, MiniGameData, SelfAssessmentData ✅
 
 ### Mobile App — Foundation
 - `src/types/sahayak.ts` — All TypeScript types ✅
 - `src/constants/theme.ts` — Colors, Spacing, Radius, Shadow ✅
 - `src/context/SahayakContext.tsx` — role/scenario/offline state ✅
 - `src/components/Header.tsx` — Role switcher, offline toggle ✅
-- `src/components/DailyCheckInModal.tsx` — Check-in modal ✅
+- `src/components/DailyCheckInModal.tsx` — Check-in modal with exact sleep hours stepper & quick chips ✅
+- `src/components/DoctorReportModal.tsx` — Upload doctor/medical reports with clinical stress flags & rest days ✅
 - `src/components/games/QuickTapGame.tsx` — Fully playable ✅
+- `src/components/games/GoNoGoGame.tsx` — Reaction inhibition & variability assessment ✅
+- `src/repositories/medical.ts` — Medical consultation & clinical notes SQLite repo ✅
+- `src/repositories/checkIns.ts` — Check-in repo writing exact sleepHours to sleep_records ✅
+- `src/hooks/useStressAssessment.ts` — Live multi-modal aggregation hook (doctor + games + sleep) ✅
 - `src/app/_layout.tsx` — Root layout ✅
 - `src/app/index.tsx` — Role-based redirect ✅
 

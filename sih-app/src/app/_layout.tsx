@@ -1,10 +1,21 @@
 import React, { useEffect, useState } from 'react';
+import { Platform } from 'react-native';
 import { Slot, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { SahayakProvider, useSahayak } from '@/context/SahayakContext';
 import Header from '@/components/Header';
 import { getDatabase } from '@/offline/database';
 import { getSession } from '@/services/auth';
+
+if (Platform.OS === 'web' && typeof window !== 'undefined') {
+  const origError = console.error;
+  console.error = (...args: any[]) => {
+    if (typeof args[0] === 'string' && args[0].includes('Unknown event handler property')) {
+      return;
+    }
+    origError.apply(console, args);
+  };
+}
 
 SplashScreen.preventAutoHideAsync();
 

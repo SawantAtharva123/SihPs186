@@ -10,7 +10,7 @@ export default function QuickTapGame({ visible, onClose, onResult }: { visible: 
   const [reactionTimes, setReactionTimes] = useState<number[]>([]);
   const [startTime, setStartTime] = useState<number>(0);
   
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const startRound = () => {
     setGameState('waiting');
@@ -99,7 +99,27 @@ export default function QuickTapGame({ visible, onClose, onResult }: { visible: 
               <View style={styles.resultsCard}>
                 <Text style={styles.resultTitle}>Results</Text>
                 <Text style={styles.resultValue}>Avg Reaction Time: {avgRT}ms</Text>
-                <Text style={styles.resultSubtitle}>Baseline Comparison: Normal</Text>
+                <Text style={[
+                  styles.resultSubtitle,
+                  {
+                    color: avgRT >= 650 
+                      ? Colors.light.stateSustained 
+                      : avgRT >= 480 
+                      ? Colors.light.warning 
+                      : avgRT >= 380 
+                      ? Colors.light.stateEmerging 
+                      : Colors.light.success,
+                    fontWeight: '700'
+                  }
+                ]}>
+                  {avgRT >= 650 
+                    ? '⚠️ Critical Operational Latency (Severe Degradation)' 
+                    : avgRT >= 480 
+                    ? '⚠️ Elevated Latency (Tactical Caution)' 
+                    : avgRT >= 380 
+                    ? 'Moderate Latency (Mild Fatigue)' 
+                    : '✓ Optimal Tactical Reaction Speed'}
+                </Text>
                 
                 <TouchableOpacity style={styles.saveBtn} onPress={() => {
                     if (onResult) {

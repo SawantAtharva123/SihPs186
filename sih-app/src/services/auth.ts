@@ -131,5 +131,5 @@ export async function resetPassword(email: string): Promise<void> {
 
 /** Flat list of demo accounts for display on the login help screen. */
 export const DEMO_ACCOUNTS_LIST = Object.entries(DEMO_ACCOUNTS).map(
-  ([email, { user }]) => ({ email, ...user }),
+  ([_email, { user }]) => ({ ...user }),
 );

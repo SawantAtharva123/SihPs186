@@ -21,7 +21,8 @@ export function useCheckIn() {
 
   const submitCheckIn = useCallback(async (data: {
     date: string;
-    sleepCompared: any;
+    sleepHours?: number;
+    sleepCompared?: any;
     workloadCompared: any;
     energyLevel: any;
     recoveryFeeling: any;
@@ -30,7 +31,10 @@ export function useCheckIn() {
     setLoading(true);
     setError(null);
     try {
-      await insertCheckIn(data);
+      await insertCheckIn({
+        ...data,
+        sleepHours: data.sleepHours ?? 7.0,
+      });
       setHasCheckedIn(true);
     } catch (e: any) {
       setError(e.message);

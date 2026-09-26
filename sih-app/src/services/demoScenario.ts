@@ -177,6 +177,8 @@ export async function seedDemoScenario(scenario: DemoScenario): Promise<void> {
     db.runAsync('DELETE FROM sleep_records WHERE person_id = ?', [PERSON_ID]),
     db.runAsync('DELETE FROM duty_records WHERE person_id = ?', [PERSON_ID]),
     db.runAsync('DELETE FROM recovery_records WHERE person_id = ?', [PERSON_ID]),
+    db.runAsync('DELETE FROM activity_sessions WHERE person_id = ?', [PERSON_ID]),
+    db.runAsync('DELETE FROM medical_records WHERE person_id = ?', [PERSON_ID]),
   ]);
 
   const days = generateScenarioDays(scenario);
@@ -235,6 +237,102 @@ export async function seedDemoScenario(scenario: DemoScenario): Promise<void> {
         ],
       );
     }
+  }
+
+  // ── Seed Mini-Game Cognitive Sessions ─────────────────────────────────────
+  const gameConfigs: Record<DemoScenario, { rt: number; std: number; acc: number; missed: number }> = {
+    scenario_a_stable:               { rt: 410, std: 32, acc: 0.94, missed: 0 },
+    scenario_b_emerging_change:      { rt: 475, std: 45, acc: 0.88, missed: 1 },
+    scenario_c_persistent_deviation: { rt: 560, std: 68, acc: 0.76, missed: 4 },
+    scenario_d_conflicting_signals:  { rt: 540, std: 62, acc: 0.81, missed: 3 },
+    scenario_e_recovery_journey:     { rt: 440, std: 36, acc: 0.91, missed: 1 },
+    scenario_f_high_volatility:      { rt: 520, std: 58, acc: 0.83, missed: 2 },
+  };
+
+  const g = gameConfigs[scenario];
+  for (let sIdx = 0; sIdx < 8; sIdx++) {
+    const sDate = days[sIdx * 3]?.date ?? days[0].date;
+    const noise = (Math.random() - 0.5) * 20;
+    await db.runAsync(
+      `INSERT INTO activity_sessions (
+        id, client_id, person_id, activity_type, difficulty,
+        start_time, end_time, duration_ms, score, accuracy,
+        avg_reaction_time_ms, reaction_variability_ms,
+        correct_answers, incorrect_answers, missed_answers,
+        created_at, updated_at, sync_status, device_timestamp
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'synced', ?)`,
+      [
+        uid(), uid(), PERSON_ID, sIdx % 2 === 0 ? 'quick_tap' : 'go_no_go', 'standard',
+        `${sDate}T09:00:00Z`, `${sDate}T09:00:25Z`, 25000, Math.round(g.acc * 100), g.acc,
+        Math.round(g.rt + noise), Math.round(g.std + (Math.random() - 0.5) * 8),
+        Math.round(20 * g.acc), Math.round(20 * (1 - g.acc)), g.missed,
+        now, now, now,
+      ]
+    );
+  }
+
+  // ── Seed Doctor / Medical Reports ─────────────────────────────────────────
+  if (scenario === 'scenario_c_persistent_deviation') {
+    await db.runAsync(
+      `INSERT INTO medical_records (
+        id, client_id, person_id, date, doctor_name, facility,
+        consultation_type, diagnosis, clinical_notes, stress_indicator,
+        recommended_rest_days, fit_for_duty, created_at, updated_at, sync_status, device_timestamp
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'synced', ?)`,
+      [
+        uid(), uid(), PERSON_ID, days[2]?.date ?? days[0].date,
+        'Dr. V. K. Rao, MD', 'Composite Base Hospital',
+        'Operational Stress & Fatigue', 'Exhaustion & circadian rhythm disorder',
+        'Patient presents with chronic night duty fatigue, elevated reaction lag. Excused from active patrol for 3 days.',
+        'High', 3, 0, now, now, now
+      ]
+    );
+  } else if (scenario === 'scenario_d_conflicting_signals') {
+    await db.runAsync(
+      `INSERT INTO medical_records (
+        id, client_id, person_id, date, doctor_name, facility,
+        consultation_type, diagnosis, clinical_notes, stress_indicator,
+        recommended_rest_days, fit_for_duty, created_at, updated_at, sync_status, device_timestamp
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'synced', ?)`,
+      [
+        uid(), uid(), PERSON_ID, days[1]?.date ?? days[0].date,
+        'Dr. P. Sharma, MD', 'Field Medical Post',
+        'Routine Medical Review', 'Subclinical stress with masked complaints',
+        'Self-report minimized strain, but physiological exhaustion observed. Recommending light duties.',
+        'High', 2, 1, now, now, now
+      ]
+    );
+  } else if (scenario === 'scenario_b_emerging_change') {
+    await db.runAsync(
+      `INSERT INTO medical_records (
+        id, client_id, person_id, date, doctor_name, facility,
+        consultation_type, diagnosis, clinical_notes, stress_indicator,
+        recommended_rest_days, fit_for_duty, created_at, updated_at, sync_status, device_timestamp
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'synced', ?)`,
+      [
+        uid(), uid(), PERSON_ID, days[4]?.date ?? days[0].date,
+        'Dr. A. Verma, MBBS', 'Unit Clinic',
+        'Routine Medical Review', 'Mild sleep disturbance',
+        'Discussed sleep hygiene and recovery micro-breaks.',
+        'Moderate', 1, 1, now, now, now
+      ]
+    );
+  } else {
+    // Stable
+    await db.runAsync(
+      `INSERT INTO medical_records (
+        id, client_id, person_id, date, doctor_name, facility,
+        consultation_type, diagnosis, clinical_notes, stress_indicator,
+        recommended_rest_days, fit_for_duty, created_at, updated_at, sync_status, device_timestamp
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'synced', ?)`,
+      [
+        uid(), uid(), PERSON_ID, days[15]?.date ?? days[0].date,
+        'Dr. S. Nair, MD', 'Base Hospital',
+        'Duty Fitness Evaluation', 'Cleared for all operational duties',
+        'Annual wellness and cognitive reaction profile normal. No medical limitations.',
+        'Normal', 0, 1, now, now, now
+      ]
+    );
   }
 }
 

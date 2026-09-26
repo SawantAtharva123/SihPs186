@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal } from 'rea
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, Radius } from '@/constants/theme';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import TeamNetworkGraph from '@/components/charts/TeamNetworkGraph';
 
 export default function CommandUnitsScreen() {
   const [selectedUnit, setSelectedUnit] = useState<any>(null);
@@ -17,10 +18,14 @@ export default function CommandUnitsScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Unit Readiness</Text>
+        <Text style={styles.headerTitle}>Unit Readiness & Network</Text>
       </View>
 
       <ScrollView style={styles.list}>
+        <TeamNetworkGraph />
+        <Text style={{ fontSize: 13, fontWeight: '700', color: Colors.light.textMuted, letterSpacing: 0.8, marginBottom: 12 }}>
+          OPERATIONAL UNITS
+        </Text>
         {mockUnits.map(u => (
           <TouchableOpacity key={u.id} style={styles.card} onPress={() => setSelectedUnit(u)}>
             <View style={styles.cardHeader}>

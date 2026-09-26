@@ -70,10 +70,11 @@ export interface PersonnelTrendsData {
 export interface DailyCheckInRecord {
   id: string;
   date: string;
-  sleepCompared: 'Much lower' | 'Lower' | 'Usual' | 'Higher' | 'Much higher';
-  workloadCompared: 'Much lower' | 'Lower' | 'Usual' | 'Higher' | 'Much higher';
-  energyLevel: 'Low' | 'Mild' | 'Usual' | 'Energetic' | 'Peak';
-  recoveryFeeling: 'Strained' | 'Slow' | 'Normal' | 'Restored' | 'Fully recharged';
+  sleepHours: number; // Exact sleep hours (e.g. 7.5h)
+  sleepCompared?: 'Much lower' | 'Lower' | 'Usual' | 'Higher' | 'Much higher' | string;
+  workloadCompared: 'Much lower' | 'Lower' | 'Usual' | 'Higher' | 'Much higher' | string;
+  energyLevel: 'Low' | 'Mild' | 'Usual' | 'Energetic' | 'Peak' | string;
+  recoveryFeeling: 'Strained' | 'Slow' | 'Normal' | 'Restored' | 'Fully recharged' | string;
   note?: string;
   syncStatus: SyncStatus;
   timestamp: string;

@@ -228,6 +228,29 @@ export async function runMigrations(db: SQLite.SQLiteDatabase): Promise<void> {
         server_timestamp            TEXT
       );
 
+      CREATE TABLE IF NOT EXISTS medical_records (
+        id                      TEXT PRIMARY KEY,
+        client_id               TEXT UNIQUE,
+        person_id               TEXT,
+        date                    TEXT,
+        doctor_name             TEXT,
+        facility                TEXT,
+        consultation_type       TEXT,
+        diagnosis               TEXT,
+        clinical_notes          TEXT,
+        stress_indicator        TEXT DEFAULT 'Normal',
+        recommended_rest_days   INTEGER DEFAULT 0,
+        fit_for_duty            INTEGER DEFAULT 1,
+        file_name               TEXT,
+        created_at              TEXT,
+        updated_at              TEXT,
+        sync_status             TEXT DEFAULT 'pending',
+        sync_attempts           INTEGER DEFAULT 0,
+        last_sync_error         TEXT,
+        device_timestamp        TEXT,
+        server_timestamp        TEXT
+      );
+
       CREATE TABLE IF NOT EXISTS welfare_cases (
         id                    TEXT PRIMARY KEY,
         client_id             TEXT UNIQUE,
@@ -365,6 +388,29 @@ export async function runMigrations(db: SQLite.SQLiteDatabase): Promise<void> {
       -- ─────────────────────────────────────────────────────────────────────
       -- Indexes for common query patterns
       -- ─────────────────────────────────────────────────────────────────────
+      CREATE TABLE IF NOT EXISTS medical_records (
+        id                       TEXT PRIMARY KEY,
+        client_id                TEXT UNIQUE,
+        person_id                TEXT,
+        date                     TEXT,
+        doctor_name              TEXT,
+        facility                 TEXT,
+        consultation_type        TEXT,
+        diagnosis                TEXT,
+        clinical_notes           TEXT,
+        stress_indicator         TEXT DEFAULT 'Normal',
+        recommended_rest_days    REAL DEFAULT 0,
+        fit_for_duty             INTEGER DEFAULT 1,
+        file_name                TEXT,
+        created_at               TEXT,
+        updated_at               TEXT,
+        sync_status              TEXT DEFAULT 'pending',
+        sync_attempts            INTEGER DEFAULT 0,
+        last_sync_error          TEXT,
+        device_timestamp         TEXT,
+        server_timestamp         TEXT
+      );
+
       CREATE INDEX IF NOT EXISTS idx_duty_records_person_date        ON duty_records        (person_id, date);
       CREATE INDEX IF NOT EXISTS idx_sleep_records_person_date       ON sleep_records       (person_id, date);
       CREATE INDEX IF NOT EXISTS idx_recovery_records_person_date    ON recovery_records    (person_id, date);
@@ -377,11 +423,41 @@ export async function runMigrations(db: SQLite.SQLiteDatabase): Promise<void> {
       CREATE INDEX IF NOT EXISTS idx_intervention_followups_interv   ON intervention_followups (intervention_id);
       CREATE INDEX IF NOT EXISTS idx_sync_queue_priority_created     ON sync_queue          (priority DESC, created_at ASC);
       CREATE INDEX IF NOT EXISTS idx_analytics_cache_person          ON analytics_cache     (person_id);
+      CREATE INDEX IF NOT EXISTS idx_medical_records_person          ON medical_records     (person_id, date);
     `);
 
     await db.execAsync('PRAGMA user_version = 1;');
   }
 
-  // Future migrations go here:
-  // if (version < 2) { await db.execAsync(`ALTER TABLE ...`); await db.execAsync('PRAGMA user_version = 2;'); }
+  // Version 2: Ensure medical_records exists on existing databases
+  if (version < 2) {
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS medical_records (
+        id                       TEXT PRIMARY KEY,
+        client_id                TEXT UNIQUE,
+        person_id                TEXT,
+        date                     TEXT,
+        doctor_name              TEXT,
+        facility                 TEXT,
+        consultation_type        TEXT,
+        diagnosis                TEXT,
+        clinical_notes           TEXT,
+        stress_indicator         TEXT DEFAULT 'Normal',
+        recommended_rest_days    REAL DEFAULT 0,
+        fit_for_duty             INTEGER DEFAULT 1,
+        file_name                TEXT,
+        created_at               TEXT,
+        updated_at               TEXT,
+        sync_status              TEXT DEFAULT 'pending',
+        sync_attempts            INTEGER DEFAULT 0,
+        last_sync_error          TEXT,
+        device_timestamp         TEXT,
+        server_timestamp         TEXT
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_medical_records_person ON medical_records (person_id, date);
+    `);
+
+    await db.execAsync('PRAGMA user_version = 2;');
+  }
 }

@@ -12,7 +12,9 @@ from app.schemas import (
     AgreementRequest, BaselineRequest, DeviationRequest, ExplainRequest,
     InterventionRequest, PersonSimRequest, RecommendRequest, RecoveryRequest,
     StressorRequest, UnitSimRequest, VolatilityRequest,
+    MultiModalStressRequest, MedicalReportUploadRequest,
 )
+from stress_assessment.engine import assess_stress, get_model_bundle
 from baseline.confidence import calculate_confidence
 from baseline.robust_baseline import compute_baseline
 from explainability.contributor_engine import build_contributor_timeline
@@ -30,7 +32,7 @@ from simulation.what_if import simulate_person, simulate_unit
 from stressor_interaction.model import analyze_stressors
 from volatility.routine_volatility import analyze_volatility
 
-router = APIRouter(prefix="/api/v1")
+router = APIRouter()
 
 
 def envelope(data: dict, confidence: float | None = None,
@@ -48,18 +50,13 @@ def envelope(data: dict, confidence: float | None = None,
 def baseline_calculate(req: BaselineRequest) -> dict:
     result = compute_baseline(req.metric, [p.model_dump() for p in req.series], window=req.window)
     conf = calculate_confidence(
-        sample_count=result["sample_count"],
-        first_date=result.get("first_date"),
-        last_date=result.get("last_date"),
-        expected_days=req.window * 2,
-        mad=result.get("mad"),
-        baseline=result.get("baseline"),
+        observations_count=result["sample_count"],
     )
     result["baseline_confidence"] = conf
     warnings = []
     if result["sample_count"] < 14:
         warnings.append("Limited history — interpret with care.")
-    return envelope(result, confidence=conf["confidence"], warnings=warnings, engine="baseline")
+    return envelope(result, confidence=conf, warnings=warnings, engine="baseline")
 
 
 @router.post("/deviation/analyze")
@@ -166,3 +163,88 @@ def intervention_analyze(req: InterventionRequest) -> dict:
 def recommendations_welfare(req: RecommendRequest) -> dict:
     recs = generate_recommendations(req.bundle)
     return envelope({"recommendations": recs}, confidence=0.6, engine="recommendations")
+
+
+@router.post("/stress/predict")
+def stress_predict(req: MultiModalStressRequest) -> dict:
+    """Multi-modal stress assessment across:
+    1. Uploaded Doctor / Medical Reports
+    2. Mini-Game Cognitive Reaction & Performance
+    3. Self-Assessment Check-in (with explicit sleep hours)
+    4. Operational Context
+    
+    Guarantees no undercounting via Asymmetric Bayes Risk minimization and strict safety floors.
+    """
+    doc_dict = req.doctor_reports.model_dump() if req.doctor_reports else None
+    games_dict = req.mini_games.model_dump() if req.mini_games else None
+    self_dict = req.self_assessment.model_dump() if req.self_assessment else None
+    ops_dict = req.operational_context.model_dump() if req.operational_context else None
+
+    result = assess_stress(
+        person_id=req.person_id,
+        doctor_reports=doc_dict,
+        mini_games=games_dict,
+        self_assessment=self_dict,
+        operational_context=ops_dict
+    )
+    conf = result.get("confidence", 0.85)
+    warnings = []
+    if result.get("signal_agreement", {}).get("disagreement_detected"):
+        warnings.append(result["signal_agreement"]["divergence_note"])
+    if result.get("safety_guardrails", {}).get("safety_override_active"):
+        for trig in result["safety_guardrails"]["safety_triggers"]:
+            warnings.append(f"Safety bias applied: {trig}")
+    return envelope(result, confidence=conf, warnings=warnings, engine="stress_assessment")
+
+
+@router.post("/medical/report-analyze")
+def medical_report_analyze(req: MedicalReportUploadRequest) -> dict:
+    """Analyzes an uploaded doctor report, assessing its clinical impact on stress and welfare."""
+    notes = (req.clinical_notes or "").lower()
+    diag = (req.diagnosis or "").lower()
+    combined_text = f"{notes} {diag}"
+    
+    # Assess severity from text notes if not explicit
+    stress_indicator = req.doctor_stress_indicator
+    if any(w in combined_text for w in ["severe stress", "ptsd", "acute anxiety", "panic", "unfit for duty", "crisis"]):
+        stress_indicator = "Severe"
+    elif any(w in combined_text for w in ["burnout", "exhaustion", "high stress", "insomnia", "chronic fatigue"]):
+        if stress_indicator not in ["Severe"]:
+            stress_indicator = "High"
+    elif any(w in combined_text for w in ["mild fatigue", "strain", "work pressure"]):
+        if stress_indicator not in ["Severe", "High"]:
+            stress_indicator = "Moderate"
+
+    result = {
+        "person_id": req.person_id,
+        "doctor_name": req.doctor_name,
+        "facility": req.facility,
+        "consultation_date": req.consultation_date,
+        "consultation_type": req.consultation_type,
+        "diagnosis": req.diagnosis,
+        "clinical_notes": req.clinical_notes,
+        "doctor_stress_indicator": stress_indicator,
+        "recommended_rest_days": req.recommended_rest_days,
+        "fit_for_duty": req.fit_for_duty,
+        "clinical_urgency": "Immediate" if stress_indicator == "Severe" else "Elevated" if stress_indicator == "High" else "Routine",
+        "welfare_impact": "Requires immediate duty relief and welfare monitoring" if stress_indicator == "Severe" else
+                          "Recommend workload easing and rest schedule" if stress_indicator == "High" else
+                          "Routine monitoring"
+    }
+    return envelope(result, confidence=0.90, engine="medical_report")
+
+
+@router.get("/stress/model-info")
+def stress_model_info() -> dict:
+    """Returns metadata and metrics for the multi-modal stress assessment model."""
+    bundle = get_model_bundle()
+    info = {
+        "model_version": bundle.get("version", "2.0.0"),
+        "metrics": bundle.get("metrics", {}),
+        "modality_weights": bundle.get("modality_weights", {}),
+        "asymmetric_cost_matrix": bundle.get("cost_matrix", []).tolist() if hasattr(bundle.get("cost_matrix"), "tolist") else bundle.get("cost_matrix"),
+        "features_count": len(bundle.get("feature_columns", [])),
+        "features": bundle.get("feature_columns", [])
+    }
+    return envelope(info, confidence=1.0, engine="stress_assessment")
+

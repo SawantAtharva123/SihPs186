@@ -213,14 +213,14 @@ export default function GoNoGoGame({ visible, onClose, onResult }: Props) {
           A coloured circle will appear on screen.
         </Text>
         <View style={styles.instructionRow}>
-          <View style={[styles.miniCircle, { backgroundColor: Colors.success ?? '#22C55E' }]} />
+          <View style={[styles.miniCircle, { backgroundColor: Colors.light.success }]} />
           <Text style={styles.instructionText}>  <Text style={styles.bold}>GREEN</Text> — Tap as quickly as you can</Text>
         </View>
         <View style={styles.instructionRow}>
-          <View style={[styles.miniCircle, { backgroundColor: Colors.danger ?? '#EF4444' }]} />
+          <View style={[styles.miniCircle, { backgroundColor: Colors.light.stateSustained }]} />
           <Text style={styles.instructionText}>  <Text style={styles.bold}>RED</Text> — Do NOT tap</Text>
         </View>
-        <Text style={[styles.instructionText, { marginTop: Spacing.sm }]}>
+        <Text style={[styles.instructionText, { marginTop: Spacing.two }]}>
           15 trials · approx. 30 seconds
         </Text>
       </View>
@@ -254,8 +254,8 @@ export default function GoNoGoGame({ visible, onClose, onResult }: Props) {
               {
                 backgroundColor:
                   currentStimulus === 'go'
-                    ? (Colors.success ?? '#22C55E')
-                    : (Colors.danger ?? '#EF4444'),
+                    ? Colors.light.success
+                    : Colors.light.stateSustained,
                 transform: [{ scale: circleScale }],
               },
             ]}
@@ -270,8 +270,8 @@ export default function GoNoGoGame({ visible, onClose, onResult }: Props) {
               {
                 color:
                   feedbackText === '✓'
-                    ? (Colors.success ?? '#22C55E')
-                    : (Colors.danger ?? '#EF4444'),
+                    ? Colors.light.success
+                    : Colors.light.stateSustained,
               },
             ]}
           >
@@ -313,19 +313,19 @@ export default function GoNoGoGame({ visible, onClose, onResult }: Props) {
           </View>
           <View style={styles.metricRow}>
             <Text style={styles.metricLabel}>Correct Responses</Text>
-            <Text style={[styles.metricValue, { color: Colors.success ?? '#22C55E' }]}>
+            <Text style={[styles.metricValue, { color: Colors.light.success }]}>
               {result.correctAnswers}
             </Text>
           </View>
           <View style={styles.metricRow}>
             <Text style={styles.metricLabel}>False Alarms (No-Go taps)</Text>
-            <Text style={[styles.metricValue, { color: Colors.danger ?? '#EF4444' }]}>
+            <Text style={[styles.metricValue, { color: Colors.light.stateSustained }]}>
               {result.incorrectAnswers}
             </Text>
           </View>
           <View style={styles.metricRow}>
             <Text style={styles.metricLabel}>Missed Go Targets</Text>
-            <Text style={[styles.metricValue, { color: Colors.warning ?? '#F59E0B' }]}>
+            <Text style={[styles.metricValue, { color: Colors.light.warning }]}>
               {result.missedAnswers}
             </Text>
           </View>
@@ -364,23 +364,23 @@ export default function GoNoGoGame({ visible, onClose, onResult }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background ?? '#F8FAFC',
+    backgroundColor: Colors.light.background,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: Spacing.md,
-    paddingTop: Spacing.lg,
-    paddingBottom: Spacing.md,
-    backgroundColor: Colors.surface ?? '#FFFFFF',
+    paddingHorizontal: Spacing.four,
+    paddingTop: Spacing.six,
+    paddingBottom: Spacing.four,
+    backgroundColor: Colors.light.backgroundElement,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border ?? '#E2E8F0',
+    borderBottomColor: Colors.light.border,
   },
   headerTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: Colors.textPrimary ?? '#1E293B',
+    color: Colors.light.navy,
   },
   closeButton: {
     width: 32,
@@ -390,33 +390,33 @@ const styles = StyleSheet.create({
   },
   closeText: {
     fontSize: 16,
-    color: Colors.textSecondary ?? '#64748B',
+    color: Colors.light.textSecondary,
   },
   centerContent: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: Spacing.xl ?? 24,
+    paddingHorizontal: Spacing.six,
   },
   gameTitle: {
     fontSize: 22,
     fontWeight: '700',
-    color: Colors.textPrimary ?? '#1E293B',
+    color: Colors.light.navy,
     textAlign: 'center',
   },
   gameSubtitle: {
     fontSize: 14,
-    color: Colors.textSecondary ?? '#64748B',
+    color: Colors.light.textSecondary,
     marginTop: 4,
-    marginBottom: Spacing.lg ?? 16,
+    marginBottom: Spacing.four,
     textAlign: 'center',
   },
   instructionCard: {
-    backgroundColor: Colors.surface ?? '#FFFFFF',
-    borderRadius: Radius.lg ?? 12,
-    padding: Spacing.lg ?? 16,
+    backgroundColor: Colors.light.backgroundElement,
+    borderRadius: Radius.lg,
+    padding: Spacing.four,
     width: '100%',
-    marginBottom: Spacing.lg ?? 16,
+    marginBottom: Spacing.four,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.06,
@@ -426,18 +426,18 @@ const styles = StyleSheet.create({
   instructionHeading: {
     fontSize: 15,
     fontWeight: '600',
-    color: Colors.textPrimary ?? '#1E293B',
-    marginBottom: Spacing.sm ?? 8,
+    color: Colors.light.navy,
+    marginBottom: Spacing.two,
   },
   instructionText: {
     fontSize: 14,
-    color: Colors.textSecondary ?? '#64748B',
+    color: Colors.light.textSecondary,
     lineHeight: 22,
   },
   instructionRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: Spacing.xs ?? 4,
+    marginTop: Spacing.one,
   },
   miniCircle: {
     width: 20,
@@ -446,16 +446,16 @@ const styles = StyleSheet.create({
   },
   bold: {
     fontWeight: '700',
-    color: Colors.textPrimary ?? '#1E293B',
+    color: Colors.light.navy,
   },
   primaryButton: {
-    backgroundColor: Colors.primary ?? '#3B82F6',
-    borderRadius: Radius.md ?? 8,
+    backgroundColor: Colors.light.primary,
+    borderRadius: Radius.md,
     paddingVertical: 14,
-    paddingHorizontal: Spacing.xl ?? 24,
+    paddingHorizontal: Spacing.six,
     alignItems: 'center',
     width: '100%',
-    marginTop: Spacing.md ?? 12,
+    marginTop: Spacing.three,
   },
   primaryButtonText: {
     color: '#FFFFFF',
@@ -466,8 +466,8 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: Spacing.xl ?? 24,
-    paddingHorizontal: Spacing.md ?? 12,
+    paddingVertical: Spacing.six,
+    paddingHorizontal: Spacing.three,
   },
   progressContainer: {
     width: '100%',
@@ -476,19 +476,19 @@ const styles = StyleSheet.create({
   progressTrack: {
     width: '100%',
     height: 6,
-    backgroundColor: Colors.border ?? '#E2E8F0',
+    backgroundColor: Colors.light.border,
     borderRadius: 3,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    backgroundColor: Colors.primary ?? '#3B82F6',
+    backgroundColor: Colors.light.primary,
     borderRadius: 3,
   },
   trialCounter: {
-    marginTop: Spacing.xs ?? 4,
+    marginTop: Spacing.one,
     fontSize: 12,
-    color: Colors.textSecondary ?? '#64748B',
+    color: Colors.light.textSecondary,
   },
   stimulusContainer: {
     alignItems: 'center',
@@ -520,15 +520,15 @@ const styles = StyleSheet.create({
   tapHint: {
     fontSize: 16,
     fontWeight: '600',
-    color: Colors.textSecondary ?? '#64748B',
+    color: Colors.light.textSecondary,
     letterSpacing: 1,
   },
   resultCard: {
-    backgroundColor: Colors.surface ?? '#FFFFFF',
-    borderRadius: Radius.lg ?? 12,
-    padding: Spacing.lg ?? 16,
+    backgroundColor: Colors.light.backgroundElement,
+    borderRadius: Radius.lg,
+    padding: Spacing.four,
     width: '100%',
-    marginBottom: Spacing.md ?? 12,
+    marginBottom: Spacing.three,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.06,
@@ -539,43 +539,43 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: Spacing.md ?? 12,
+    marginBottom: Spacing.three,
   },
   scoreLabel: {
     fontSize: 16,
     fontWeight: '600',
-    color: Colors.textPrimary ?? '#1E293B',
+    color: Colors.light.navy,
   },
   scoreValue: {
     fontSize: 28,
     fontWeight: '700',
-    color: Colors.primary ?? '#3B82F6',
+    color: Colors.light.primary,
   },
   divider: {
     height: 1,
-    backgroundColor: Colors.border ?? '#E2E8F0',
-    marginBottom: Spacing.md ?? 12,
+    backgroundColor: Colors.light.border,
+    marginBottom: Spacing.three,
   },
   metricRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: Spacing.sm ?? 8,
+    marginBottom: Spacing.two,
   },
   metricLabel: {
     fontSize: 14,
-    color: Colors.textSecondary ?? '#64748B',
+    color: Colors.light.textSecondary,
   },
   metricValue: {
     fontSize: 14,
     fontWeight: '600',
-    color: Colors.textPrimary ?? '#1E293B',
+    color: Colors.light.navy,
   },
   disclaimer: {
     fontSize: 11,
-    color: Colors.textSecondary ?? '#64748B',
+    color: Colors.light.textSecondary,
     textAlign: 'center',
     fontStyle: 'italic',
-    marginBottom: Spacing.sm ?? 8,
-    paddingHorizontal: Spacing.md ?? 12,
+    marginBottom: Spacing.two,
+    paddingHorizontal: Spacing.three,
   },
 });

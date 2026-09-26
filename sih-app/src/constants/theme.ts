@@ -79,6 +79,14 @@ export const Colors = {
 } as const;
 
 export type ThemeColors = typeof Colors.light;
+export type ThemeColor = keyof ThemeColors;
+
+export const Fonts = {
+  regular: Platform.select({ ios: 'System', default: 'sans-serif' }),
+  medium: Platform.select({ ios: 'System', default: 'sans-serif-medium' }),
+  bold: Platform.select({ ios: 'System', default: 'sans-serif' }),
+  mono: Platform.select({ ios: 'Menlo', default: 'monospace' }),
+};
 
 export const Spacing = {
   half: 2,
