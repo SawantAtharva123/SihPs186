@@ -26,10 +26,10 @@ export default function Header() {
 
   const getRoleInfo = (r: UserRole) => {
     switch (r) {
-      case 'personnel':        return { title: 'Personnel',      icon: 'person',   color: colors.primary };
-      case 'welfare_officer':  return { title: 'Welfare Officer', icon: 'medical',  color: colors.accent };
-      case 'command_admin':    return { title: 'Command',         icon: 'business', color: colors.stateSustained };
-      default:                 return { title: 'Unknown',         icon: 'help',     color: colors.textSecondary };
+      case 'personnel':        return { title: 'Personnel', icon: 'person',   color: colors.primary };
+      case 'welfare_officer':  return { title: 'Welfare',   icon: 'medical',  color: colors.accent };
+      case 'command_admin':    return { title: 'Command',   icon: 'business', color: colors.stateSustained };
+      default:                 return { title: 'Unknown',   icon: 'help',     color: colors.textSecondary };
     }
   };
 
@@ -187,25 +187,26 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: Spacing.four,
-    paddingVertical: Spacing.three,
-    height: 60,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.two,
+    height: 56,
   },
   brandContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.two,
+    gap: 6,
   },
   brandText: {
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: 17,
+    fontWeight: '800',
     color: Colors.light.navy,
     letterSpacing: 0.5,
   },
   controls: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.three,
+    gap: Spacing.two,
+    flexShrink: 1,
   },
   offlineToggle: {
     flexDirection: 'row',
@@ -220,7 +221,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.light.warningBg,
   },
   offlineText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '600',
     color: Colors.light.warning,
   },
@@ -228,18 +229,19 @@ const styles = StyleSheet.create({
   roleBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.one,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.two,
+    gap: 4,
+    paddingHorizontal: Spacing.two,
+    paddingVertical: 4,
     backgroundColor: Colors.light.backgroundSelected,
     borderRadius: Radius.full,
   },
   roleText: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: 12,
+    fontWeight: '700',
   },
   logoutBtn: {
-    padding: Spacing.one,
+    padding: 4,
+    flexShrink: 0,
   },
   offlineBanner: {
     backgroundColor: Colors.light.warningBg,

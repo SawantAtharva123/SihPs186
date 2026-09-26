@@ -234,49 +234,52 @@ export default function PersonnelHomeScreen() {
           <Text style={[styles.stateDescription, { color: isDark ? '#CBD5E1' : Colors.light.text }]}>{theme.desc}</Text>
 
           {/* Multi-Modal Sub-Signals Breakdown */}
-          <View style={styles.subsignalsContainer}>
-            <Text style={[styles.subsignalHeader, { color: colors.textSecondary }]}>INPUT SIGNAL TRIANGULATION</Text>
+          <View style={[styles.subsignalsContainer, { backgroundColor: isDark ? 'rgba(0, 0, 0, 0.4)' : 'rgba(255, 255, 255, 0.8)', borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'transparent', borderWidth: isDark ? 1 : 0 }]}>
+            <Text style={[styles.subsignalHeader, { color: isDark ? '#94A3B8' : colors.textSecondary }]}>INPUT SIGNAL TRIANGULATION</Text>
             
             <View style={styles.signalGrid}>
               {/* 1. Doctor Reports */}
               <View style={[styles.signalCard, { backgroundColor: isDark ? '#1E293B' : '#FFFFFF', borderColor: isDark ? '#334155' : colors.border }]}>
                 <View style={styles.signalCardHeader}>
-                  <Ionicons name="medkit" size={16} color={colors.primary} />
-                  <Text style={[styles.signalTitle, { color: colors.textSecondary }]}>Doctor Reports</Text>
+                  <Ionicons name="medkit" size={13} color={colors.primary} />
+                  <Text style={[styles.signalTitle, { color: isDark ? '#94A3B8' : colors.textSecondary }]} numberOfLines={1}>Doctor</Text>
                 </View>
-                <Text style={[styles.signalValue, { color: isDark ? '#F8FAFC' : colors.navy }]}>
+                <Text style={[styles.signalValue, { color: isDark ? '#F8FAFC' : colors.navy }]} numberOfLines={1}>
                   {assessment?.subscores?.doctor_reports?.clinical_indicator ?? 'Normal'}
                 </Text>
-                <Text style={[styles.signalSub, { color: colors.textMuted }]}>
-                  {assessment?.subscores?.doctor_reports?.consultations ?? 0} consult(s) · {assessment?.subscores?.doctor_reports?.sick_leave_days ?? 0}d leave
+                <Text style={[styles.signalSub, { color: isDark ? '#64748B' : colors.textMuted }]} numberOfLines={2}>
+                  {assessment?.subscores?.doctor_reports?.consultations ?? 0} consult · {assessment?.subscores?.doctor_reports?.sick_leave_days ?? 0}d lv
                 </Text>
               </View>
 
               {/* 2. Mini-Games Reaction Timing */}
               <View style={[styles.signalCard, { backgroundColor: isDark ? '#1E293B' : '#FFFFFF', borderColor: isDark ? '#334155' : colors.border }]}>
                 <View style={styles.signalCardHeader}>
-                  <Ionicons name="flash" size={16} color={colors.warning} />
-                  <Text style={[styles.signalTitle, { color: colors.textSecondary }]}>Mini-Games</Text>
+                  <Ionicons name="flash" size={13} color={colors.warning} />
+                  <Text style={[styles.signalTitle, { color: isDark ? '#94A3B8' : colors.textSecondary }]} numberOfLines={1}>Mini-Games</Text>
                 </View>
-                <Text style={[styles.signalValue, { color: isDark ? '#F8FAFC' : colors.navy }]}>
+                <Text style={[styles.signalValue, { color: isDark ? '#F8FAFC' : colors.navy }]} numberOfLines={1}>
                   {Math.round(assessment?.subscores?.mini_games?.avg_reaction_time_ms ?? 450)} ms
                 </Text>
-                <Text style={[styles.signalSub, { color: colors.textMuted }]}>
-                  ±{Math.round(assessment?.subscores?.mini_games?.reaction_variability_ms ?? 38)}ms var · {assessment?.subscores?.mini_games?.accuracy_pct ?? 90}% acc
+                <Text style={[styles.signalSub, { color: isDark ? '#64748B' : colors.textMuted }]} numberOfLines={2}>
+                  ±{Math.round(assessment?.subscores?.mini_games?.reaction_variability_ms ?? 38)}ms · {(() => {
+                    const rawAcc = assessment?.subscores?.mini_games?.accuracy_pct ?? 90;
+                    return Math.round(rawAcc > 100 ? rawAcc / 100 : rawAcc);
+                  })()}%
                 </Text>
               </View>
 
               {/* 3. Sleep & Self-Assessment */}
               <View style={[styles.signalCard, { backgroundColor: isDark ? '#1E293B' : '#FFFFFF', borderColor: isDark ? '#334155' : colors.border }]}>
                 <View style={styles.signalCardHeader}>
-                  <Ionicons name="moon" size={16} color={colors.accent} />
-                  <Text style={[styles.signalTitle, { color: colors.textSecondary }]}>Self Check-in</Text>
+                  <Ionicons name="moon" size={13} color={colors.accent} />
+                  <Text style={[styles.signalTitle, { color: isDark ? '#94A3B8' : colors.textSecondary }]} numberOfLines={1}>Check-in</Text>
                 </View>
-                <Text style={[styles.signalValue, { color: isDark ? '#F8FAFC' : colors.navy }]}>
+                <Text style={[styles.signalValue, { color: isDark ? '#F8FAFC' : colors.navy }]} numberOfLines={1}>
                   {assessment?.subscores?.self_assessment?.sleep_hours?.toFixed(1) ?? '7.0'} hrs
                 </Text>
-                <Text style={[styles.signalSub, { color: colors.textMuted }]}>
-                  Sleep duration · {assessment?.subscores?.self_assessment?.state ?? 'Normal'} state
+                <Text style={[styles.signalSub, { color: isDark ? '#64748B' : colors.textMuted }]} numberOfLines={2}>
+                  Sleep · {assessment?.subscores?.self_assessment?.state ?? 'Normal'}
                 </Text>
               </View>
             </View>
@@ -792,30 +795,34 @@ const styles = StyleSheet.create({
   },
   signalCard: {
     flex: 1,
+    minWidth: 0,
+    overflow: 'hidden',
     backgroundColor: '#FFFFFF',
     borderRadius: Radius.md,
-    padding: Spacing.two,
+    padding: 6,
     borderWidth: 1,
     borderColor: Colors.light.border,
   },
   signalCardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    marginBottom: 4,
+    gap: 3,
+    marginBottom: 2,
   },
   signalTitle: {
-    fontSize: 10,
+    fontSize: 9.5,
     fontWeight: '700',
     color: Colors.light.textSecondary,
+    flexShrink: 1,
   },
   signalValue: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '800',
     color: Colors.light.navy,
   },
   signalSub: {
-    fontSize: 9,
+    fontSize: 8.5,
+    lineHeight: 11,
     color: Colors.light.textMuted,
     marginTop: 2,
   },

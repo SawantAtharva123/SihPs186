@@ -2,9 +2,12 @@ import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/context/ThemeContext';
 import { Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function WelfareLayout() {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
+  const bottomInset = Math.max(insets.bottom, Platform.OS === 'android' ? 14 : 8);
 
   return (
     <Tabs
@@ -15,8 +18,9 @@ export default function WelfareLayout() {
         tabBarStyle: {
           backgroundColor: colors.backgroundElement,
           borderTopColor: colors.border,
-          height: Platform.OS === 'ios' ? 84 : 64,
-          paddingBottom: Platform.OS === 'ios' ? 24 : 8,
+          borderTopWidth: 1,
+          height: 60 + bottomInset,
+          paddingBottom: bottomInset + 4,
           paddingTop: 6,
         },
         tabBarLabelStyle: {
@@ -28,7 +32,7 @@ export default function WelfareLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Command Grid',
+          title: 'Command',
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'apps' : 'apps-outline'} size={22} color={color} />
           ),
@@ -55,7 +59,7 @@ export default function WelfareLayout() {
       <Tabs.Screen
         name="interventions"
         options={{
-          title: 'Interventions',
+          title: 'Actions',
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'flask' : 'flask-outline'} size={22} color={color} />
           ),

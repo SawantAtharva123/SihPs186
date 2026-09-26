@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, Radius } from '@/constants/theme';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { predictStressAssessment, StressAssessmentResult } from '@/services/analyticsClient';
+import { useTheme } from '@/context/ThemeContext';
 
 interface DemoPersonnel {
   id: string;
@@ -169,6 +170,7 @@ const PERSONNEL_DATA: DemoPersonnel[] = [
 ];
 
 export default function WelfarePersonnelScreen() {
+  const { colors, isDark } = useTheme();
   const [selectedPerson, setSelectedPerson] = useState<DemoPersonnel | null>(null);
   const [assessment, setAssessment] = useState<StressAssessmentResult | null>(null);
   const [loading, setLoading] = useState(false);
@@ -196,10 +198,10 @@ export default function WelfarePersonnelScreen() {
 
   const getLevelColor = (level?: string) => {
     switch (level) {
-      case 'Critical': return { color: Colors.light.stateSustained, bg: Colors.light.stateSustainedBg };
-      case 'High': return { color: Colors.light.warning, bg: '#FFF8E6' };
-      case 'Medium': return { color: Colors.light.stateEmerging, bg: Colors.light.stateEmergingBg };
-      default: return { color: Colors.light.success, bg: '#EBF9F1' };
+      case 'Critical': return { color: colors.stateSustained, bg: isDark ? '#4C0519' : '#FFF1F2' };
+      case 'High': return { color: colors.warning, bg: isDark ? '#451A03' : '#FFF8E6' };
+      case 'Medium': return { color: colors.stateEmerging, bg: isDark ? '#082F49' : colors.stateEmergingBg };
+      default: return { color: colors.stateStable, bg: isDark ? '#064E3B' : '#EBF9F1' };
     }
   };
 
@@ -211,18 +213,19 @@ export default function WelfarePersonnelScreen() {
   });
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Personnel Welfare Triangulation</Text>
-        <Text style={styles.headerSub}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.header, { backgroundColor: colors.backgroundElement, borderColor: colors.border }]}>
+        <Text style={[styles.headerTitle, { color: isDark ? '#F8FAFC' : colors.navy }]}>Personnel Welfare Triangulation</Text>
+        <Text style={[styles.headerSub, { color: colors.textSecondary }]}>
           Real-time AI assessment with Zero-Undercounting Safety Bias
         </Text>
 
-        <View style={styles.searchBar}>
-          <Ionicons name="search" size={20} color={Colors.light.textMuted} />
+        <View style={[styles.searchBar, { backgroundColor: isDark ? colors.backgroundSelected : Colors.light.background, borderColor: colors.border }]}>
+          <Ionicons name="search" size={20} color={colors.textMuted} />
           <TextInput
             placeholder="Search by name or CAPF ID..."
-            style={styles.searchInput}
+            placeholderTextColor={colors.textMuted}
+            style={[styles.searchInput, { color: colors.text }]}
             value={search}
             onChangeText={setSearch}
           />
@@ -232,10 +235,18 @@ export default function WelfarePersonnelScreen() {
           {['All', 'Critical Priority', 'Elevated Stress', 'Signal Divergence'].map((f) => (
             <TouchableOpacity
               key={f}
-              style={[styles.filterPill, filter === f && styles.filterPillActive]}
+              style={[
+                styles.filterPill,
+                { backgroundColor: colors.backgroundElement, borderColor: colors.border },
+                filter === f && { backgroundColor: colors.primary, borderColor: colors.primary }
+              ]}
               onPress={() => setFilter(f)}
             >
-              <Text style={[styles.filterText, filter === f && styles.filterTextActive]}>{f}</Text>
+              <Text style={[
+                styles.filterText,
+                { color: colors.textSecondary },
+                filter === f && { color: '#FFFFFF', fontWeight: '700' }
+              ]}>{f}</Text>
             </TouchableOpacity>
           ))}
         </ScrollView>
@@ -250,13 +261,13 @@ export default function WelfarePersonnelScreen() {
           return (
             <TouchableOpacity
               key={p.id}
-              style={styles.personCard}
+              style={[styles.personCard, { backgroundColor: colors.card, borderColor: colors.border }]}
               onPress={() => handleSelectPerson(p)}
             >
               <View style={styles.personHeader}>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.personName}>{p.name}</Text>
-                  <Text style={styles.personId}>
+                  <Text style={[styles.personName, { color: colors.text }]}>{p.name}</Text>
+                  <Text style={[styles.personId, { color: colors.textSecondary }]}>
                     {p.rank} · {p.id} · {p.unit}
                   </Text>
                 </View>
@@ -266,20 +277,20 @@ export default function WelfarePersonnelScreen() {
               </View>
 
               {/* Snapshot of Signals */}
-              <View style={styles.snapshotRow}>
+              <View style={[styles.snapshotRow, { borderColor: colors.borderSubtle }]}>
                 <View style={styles.snapItem}>
-                  <Ionicons name="medical" size={13} color={Colors.light.primary} />
-                  <Text style={styles.snapText}>
+                  <Ionicons name="medical" size={13} color={colors.primary} />
+                  <Text style={[styles.snapText, { color: colors.textSecondary }]}>
                     {p.doctorReports.consultations_count} consult(s)
                   </Text>
                 </View>
                 <View style={styles.snapItem}>
-                  <Ionicons name="flash" size={13} color={Colors.light.warning} />
-                  <Text style={styles.snapText}>{p.miniGames.avg_reaction_time_ms}ms RT</Text>
+                  <Ionicons name="flash" size={13} color={colors.warning} />
+                  <Text style={[styles.snapText, { color: colors.textSecondary }]}>{p.miniGames.avg_reaction_time_ms}ms RT</Text>
                 </View>
                 <View style={styles.snapItem}>
-                  <Ionicons name="moon" size={13} color={Colors.light.accent} />
-                  <Text style={styles.snapText}>{p.selfAssessment.sleep_hours}h sleep</Text>
+                  <Ionicons name="moon" size={13} color={colors.accent} />
+                  <Text style={[styles.snapText, { color: colors.textSecondary }]}>{p.selfAssessment.sleep_hours}h sleep</Text>
                 </View>
               </View>
             </TouchableOpacity>
@@ -288,25 +299,25 @@ export default function WelfarePersonnelScreen() {
       </ScrollView>
 
       {/* ── DETAIL MODAL: MULTI-MODAL ML STRESS EVALUATION ─────────── */}
-      <Modal visible={!!selectedPerson} animationType="slide" presentationStyle="pageSheet">
-        <SafeAreaView style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
+      <Modal visible={!!selectedPerson} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setSelectedPerson(null)}>
+        <SafeAreaView style={[styles.modalContainer, { backgroundColor: colors.background }]}>
+          <View style={[styles.modalHeader, { backgroundColor: colors.backgroundElement, borderColor: colors.border }]}>
             <View>
-              <Text style={styles.modalTitle}>{selectedPerson?.name}</Text>
-              <Text style={styles.modalSub}>
+              <Text style={[styles.modalTitle, { color: isDark ? '#F8FAFC' : colors.navy }]}>{selectedPerson?.name}</Text>
+              <Text style={[styles.modalSub, { color: colors.textSecondary }]}>
                 {selectedPerson?.rank} · {selectedPerson?.id}
               </Text>
             </View>
             <TouchableOpacity onPress={() => setSelectedPerson(null)}>
-              <Ionicons name="close" size={24} color={Colors.light.text} />
+              <Ionicons name="close" size={24} color={colors.text} />
             </TouchableOpacity>
           </View>
 
           <ScrollView style={styles.modalBody}>
             {loading ? (
               <View style={{ padding: 40, alignItems: 'center' }}>
-                <ActivityIndicator size="large" color={Colors.light.primary} />
-                <Text style={{ marginTop: 12, color: Colors.light.textSecondary, fontSize: 13 }}>
+                <ActivityIndicator size="large" color={colors.primary} />
+                <Text style={{ marginTop: 12, color: colors.textSecondary, fontSize: 13 }}>
                   Executing Multi-Modal Asymmetric Inference...
                 </Text>
               </View>
@@ -323,7 +334,7 @@ export default function WelfarePersonnelScreen() {
                   ]}
                 >
                   <View style={styles.resultHeader}>
-                    <Text style={styles.resultLabel}>AI EVALUATED STRESS RISK</Text>
+                    <Text style={[styles.resultLabel, { color: isDark ? '#94A3B8' : colors.textSecondary }]}>AI EVALUATED STRESS RISK</Text>
                     <Text
                       style={[
                         styles.resultScore,
@@ -344,106 +355,106 @@ export default function WelfarePersonnelScreen() {
                   </Text>
 
                   {/* Safety Guarantee Callout */}
-                  <View style={styles.safetyBox}>
+                  <View style={[styles.safetyBox, { backgroundColor: isDark ? 'rgba(5, 150, 105, 0.2)' : '#ECFDF5', borderColor: isDark ? '#05966966' : '#A7F3D0' }]}>
                     <Ionicons name="shield-checkmark" size={16} color="#059669" />
-                    <Text style={styles.safetyText}>
+                    <Text style={[styles.safetyText, { color: isDark ? '#6EE7B7' : '#065F46' }]}>
                       Zero-Undercounting Bias Active: Bayes loss matrix penalizes false negatives up to 22× to prevent missing personnel in need.
                     </Text>
                   </View>
                 </View>
 
                 {/* Triangulation Modalities */}
-                <Text style={styles.sectionHeader}>SIGNAL TRIANGULATION BREAKDOWN</Text>
+                <Text style={[styles.sectionHeader, { color: isDark ? '#F8FAFC' : colors.navy }]}>SIGNAL TRIANGULATION BREAKDOWN</Text>
 
                 {/* 1. Doctor Reports */}
-                <View style={styles.modalityCard}>
+                <View style={[styles.modalityCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
                   <View style={styles.modalityHeader}>
-                    <Ionicons name="medical" size={18} color={Colors.light.primary} />
-                    <Text style={styles.modalityTitle}>1. Doctor & Medical Reports</Text>
-                    <Text style={styles.modalityState}>
+                    <Ionicons name="medical" size={18} color={colors.primary} />
+                    <Text style={[styles.modalityTitle, { color: isDark ? '#F8FAFC' : colors.navy }]}>1. Doctor & Medical Reports</Text>
+                    <Text style={[styles.modalityState, { color: colors.primary }]}>
                       {assessment?.subscores?.doctor_reports?.clinical_indicator}
                     </Text>
                   </View>
-                  <Text style={styles.modalityText}>
+                  <Text style={[styles.modalityText, { color: colors.textSecondary }]}>
                     • Consultations: {assessment?.subscores?.doctor_reports?.consultations} logged
                   </Text>
-                  <Text style={styles.modalityText}>
+                  <Text style={[styles.modalityText, { color: colors.textSecondary }]}>
                     • Recommended Rest: {selectedPerson?.doctorReports.recommended_rest_days} days
                   </Text>
-                  <Text style={styles.modalityNotes}>
+                  <Text style={[styles.modalityNotes, { color: colors.textMuted, borderTopColor: colors.borderSubtle }]}>
                     Clinical Notes: "{selectedPerson?.doctorReports.clinical_notes}"
                   </Text>
                 </View>
 
                 {/* 2. Mini-Games Performance */}
-                <View style={styles.modalityCard}>
+                <View style={[styles.modalityCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
                   <View style={styles.modalityHeader}>
-                    <Ionicons name="flash" size={18} color={Colors.light.warning} />
-                    <Text style={styles.modalityTitle}>2. Mini-Games Cognitive Reaction</Text>
-                    <Text style={styles.modalityState}>
+                    <Ionicons name="flash" size={18} color={colors.warning} />
+                    <Text style={[styles.modalityTitle, { color: isDark ? '#F8FAFC' : colors.navy }]}>2. Mini-Games Cognitive Reaction</Text>
+                    <Text style={[styles.modalityState, { color: colors.warning }]}>
                       {assessment?.subscores?.mini_games?.state}
                     </Text>
                   </View>
-                  <Text style={styles.modalityText}>
+                  <Text style={[styles.modalityText, { color: colors.textSecondary }]}>
                     • Average Reaction Time: {assessment?.subscores?.mini_games?.avg_reaction_time_ms} ms
                   </Text>
-                  <Text style={styles.modalityText}>
+                  <Text style={[styles.modalityText, { color: colors.textSecondary }]}>
                     • Reaction Variability: ±{assessment?.subscores?.mini_games?.reaction_variability_ms} ms
                   </Text>
-                  <Text style={styles.modalityText}>
+                  <Text style={[styles.modalityText, { color: colors.textSecondary }]}>
                     • Target Accuracy: {assessment?.subscores?.mini_games?.accuracy_pct}%
                   </Text>
                 </View>
 
                 {/* 3. Self-Assessment */}
-                <View style={styles.modalityCard}>
+                <View style={[styles.modalityCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
                   <View style={styles.modalityHeader}>
-                    <Ionicons name="moon" size={18} color={Colors.light.accent} />
-                    <Text style={styles.modalityTitle}>3. Self-Assessment Check-in</Text>
-                    <Text style={styles.modalityState}>
+                    <Ionicons name="moon" size={18} color={colors.accent} />
+                    <Text style={[styles.modalityTitle, { color: isDark ? '#F8FAFC' : colors.navy }]}>3. Self-Assessment Check-in</Text>
+                    <Text style={[styles.modalityState, { color: colors.accent }]}>
                       {assessment?.subscores?.self_assessment?.state}
                     </Text>
                   </View>
-                  <Text style={styles.modalityText}>
+                  <Text style={[styles.modalityText, { color: colors.textSecondary }]}>
                     • Recorded Sleep Duration: {assessment?.subscores?.self_assessment?.sleep_hours.toFixed(1)} hours
                   </Text>
-                  <Text style={styles.modalityText}>
+                  <Text style={[styles.modalityText, { color: colors.textSecondary }]}>
                     • Subjective Stress: {selectedPerson?.selfAssessment.self_reported_stress}
                   </Text>
-                  <Text style={styles.modalityText}>
+                  <Text style={[styles.modalityText, { color: colors.textSecondary }]}>
                     • Workload Comparison: {selectedPerson?.selfAssessment.workload_compared}
                   </Text>
                 </View>
 
                 {/* Signal Agreement / Disagreement Analysis */}
-                <View style={styles.agreementCard}>
+                <View style={[styles.agreementCard, { backgroundColor: isDark ? '#064E3B33' : '#F0FDF4', borderColor: isDark ? '#05966955' : '#BBF7D0' }]}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                    <Ionicons name="git-network" size={16} color={Colors.light.primary} />
-                    <Text style={styles.agreementTitle}>
+                    <Ionicons name="git-network" size={16} color={colors.primary} />
+                    <Text style={[styles.agreementTitle, { color: colors.primary }]}>
                       Signal Agreement: {assessment?.signal_agreement?.level}
                     </Text>
                   </View>
                   {assessment?.signal_agreement?.divergence_note ? (
-                    <Text style={styles.agreementDesc}>
+                    <Text style={[styles.agreementDesc, { color: colors.text }]}>
                       {assessment?.signal_agreement?.divergence_note}
                     </Text>
                   ) : (
-                    <Text style={styles.agreementDesc}>
+                    <Text style={[styles.agreementDesc, { color: colors.text }]}>
                       All three signal sources (doctor records, cognitive test reaction times, and self-reported sleep) converge consistently.
                     </Text>
                   )}
                 </View>
 
                 {/* Welfare Officer Recommendations */}
-                <Text style={styles.sectionHeader}>RECOMMENDED INTERVENTIONS</Text>
+                <Text style={[styles.sectionHeader, { color: isDark ? '#F8FAFC' : colors.navy }]}>RECOMMENDED INTERVENTIONS</Text>
                 {assessment?.recommendations?.map((rec, i) => (
-                  <View key={i} style={styles.recItem}>
-                    <Ionicons name="arrow-forward-circle" size={18} color={Colors.light.primary} />
+                  <View key={i} style={[styles.recItem, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                    <Ionicons name="arrow-forward-circle" size={18} color={colors.primary} />
                     <View style={{ flex: 1 }}>
-                      <Text style={styles.recType}>
+                      <Text style={[styles.recType, { color: isDark ? '#F8FAFC' : colors.navy }]}>
                         {rec.type} ({rec.urgency})
                       </Text>
-                      <Text style={styles.recAction}>{rec.action}</Text>
+                      <Text style={[styles.recAction, { color: colors.textSecondary }]}>{rec.action}</Text>
                     </View>
                   </View>
                 ))}

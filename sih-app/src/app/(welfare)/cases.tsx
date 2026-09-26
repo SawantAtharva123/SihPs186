@@ -3,8 +3,10 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal } from 'rea
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, Radius } from '@/constants/theme';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTheme } from '@/context/ThemeContext';
 
 export default function CasesScreen() {
+  const { colors, isDark } = useTheme();
   const [selectedCase, setSelectedCase] = useState<any>(null);
 
   const mockCases = [
@@ -15,22 +17,28 @@ export default function CasesScreen() {
   ];
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Welfare Cases</Text>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.header, { backgroundColor: colors.backgroundElement, borderBottomColor: colors.border }]}>
+        <Text style={[styles.headerTitle, { color: isDark ? '#F8FAFC' : colors.navy }]}>Welfare Cases</Text>
       </View>
 
       <ScrollView style={styles.list}>
         {mockCases.map(c => (
-          <TouchableOpacity key={c.id} style={styles.card} onPress={() => setSelectedCase(c)}>
+          <TouchableOpacity
+            key={c.id}
+            style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}
+            onPress={() => setSelectedCase(c)}
+          >
             <View style={styles.cardHeader}>
-              <Text style={styles.cardName}>{c.name}</Text>
-              <Text style={styles.cardId}>{c.id}</Text>
+              <Text style={[styles.cardName, { color: colors.text }]}>{c.name}</Text>
+              <Text style={[styles.cardId, { color: colors.textSecondary }]}>{c.id}</Text>
             </View>
-            <Text style={styles.cardReason}>{c.reason}</Text>
+            <Text style={[styles.cardReason, { color: colors.textSecondary }]}>{c.reason}</Text>
             <View style={styles.cardFooter}>
-              <View style={styles.badge}><Text style={styles.badgeText}>{c.status}</Text></View>
-              <Text style={styles.cardDate}>{c.date}</Text>
+              <View style={[styles.badge, { backgroundColor: isDark ? colors.backgroundSelected : Colors.light.backgroundSelected }]}>
+                <Text style={[styles.badgeText, { color: colors.primary }]}>{c.status}</Text>
+              </View>
+              <Text style={[styles.cardDate, { color: colors.textMuted }]}>{c.date}</Text>
             </View>
           </TouchableOpacity>
         ))}
@@ -38,45 +46,47 @@ export default function CasesScreen() {
 
       {/* Case Detail Modal */}
       <Modal visible={!!selectedCase} animationType="slide" onRequestClose={() => setSelectedCase(null)}>
-        <SafeAreaView style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <TouchableOpacity onPress={() => setSelectedCase(null)}><Ionicons name="close" size={24} color={Colors.light.text} /></TouchableOpacity>
-            <Text style={styles.modalTitle}>Case {selectedCase?.id}</Text>
+        <SafeAreaView style={[styles.modalContainer, { backgroundColor: colors.background }]}>
+          <View style={[styles.modalHeader, { borderBottomColor: colors.border, backgroundColor: colors.backgroundElement }]}>
+            <TouchableOpacity onPress={() => setSelectedCase(null)}>
+              <Ionicons name="close" size={24} color={colors.text} />
+            </TouchableOpacity>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>Case {selectedCase?.id}</Text>
             <View style={{ width: 24 }} />
           </View>
           
           <ScrollView style={styles.modalContent}>
             {selectedCase && (
               <>
-                <Text style={styles.detailName}>{selectedCase.name}</Text>
+                <Text style={[styles.detailName, { color: isDark ? '#F8FAFC' : colors.navy }]}>{selectedCase.name}</Text>
                 
-                <View style={styles.stepper}>
-                  <Text style={styles.stepperTitle}>Current Stage: {selectedCase.status}</Text>
+                <View style={[styles.stepper, { backgroundColor: colors.backgroundElement, borderColor: colors.border }]}>
+                  <Text style={[styles.stepperTitle, { color: colors.text }]}>Current Stage: {selectedCase.status}</Text>
                   <View style={styles.stepRow}>
-                    <View style={styles.stepDotActive} />
-                    <View style={styles.stepLineActive} />
-                    <View style={styles.stepDotActive} />
-                    <View style={styles.stepLine} />
-                    <View style={styles.stepDot} />
+                    <View style={[styles.stepDotActive, { backgroundColor: colors.primary }]} />
+                    <View style={[styles.stepLineActive, { backgroundColor: colors.primary }]} />
+                    <View style={[styles.stepDotActive, { backgroundColor: colors.primary }]} />
+                    <View style={[styles.stepLine, { backgroundColor: colors.border }]} />
+                    <View style={[styles.stepDot, { backgroundColor: colors.border }]} />
                   </View>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                    <Text style={styles.stepLabel}>Review</Text>
-                    <Text style={styles.stepLabel}>Intervention</Text>
-                    <Text style={styles.stepLabel}>Close</Text>
+                    <Text style={[styles.stepLabel, { color: colors.textSecondary }]}>Review</Text>
+                    <Text style={[styles.stepLabel, { color: colors.textSecondary }]}>Intervention</Text>
+                    <Text style={[styles.stepLabel, { color: colors.textSecondary }]}>Close</Text>
                   </View>
                 </View>
 
                 <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>Observed Pattern</Text>
-                  <Text style={styles.textBody}>Personnel shows consecutive short sleep periods (&lt; 5h) combined with high subjective workload over the last 14 days.</Text>
+                  <Text style={[styles.sectionTitle, { color: colors.text }]}>Observed Pattern</Text>
+                  <Text style={[styles.textBody, { color: colors.textSecondary }]}>Personnel shows consecutive short sleep periods (&lt; 5h) combined with high subjective workload over the last 14 days.</Text>
                 </View>
                 
                 <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>Possible Contributors</Text>
-                  <Text style={styles.textBody}>• Night shift rotation (3 consecutive) {'\n'}• Commute delay reported on check-in</Text>
+                  <Text style={[styles.sectionTitle, { color: colors.text }]}>Possible Contributors</Text>
+                  <Text style={[styles.textBody, { color: colors.textSecondary }]}>• Night shift rotation (3 consecutive) {'\n'}• Commute delay reported on check-in</Text>
                 </View>
                 
-                <TouchableOpacity style={styles.actionBtn} onPress={() => alert('Navigating to intervention planner')}>
+                <TouchableOpacity style={[styles.actionBtn, { backgroundColor: colors.primary }]} onPress={() => alert('Navigating to intervention planner')}>
                   <Ionicons name="flask" size={20} color="#fff" />
                   <Text style={styles.actionBtnText}>Plan Intervention</Text>
                 </TouchableOpacity>
@@ -90,39 +100,39 @@ export default function CasesScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.light.background },
-  header: { padding: Spacing.four, backgroundColor: Colors.light.backgroundElement, borderBottomWidth: 1, borderBottomColor: Colors.light.border },
-  headerTitle: { fontSize: 24, fontWeight: 'bold', color: Colors.light.navy },
+  container: { flex: 1 },
+  header: { padding: Spacing.four, borderBottomWidth: 1 },
+  headerTitle: { fontSize: 24, fontWeight: 'bold' },
   list: { padding: Spacing.four },
-  card: { backgroundColor: Colors.light.backgroundElement, padding: Spacing.four, borderRadius: Radius.lg, marginBottom: Spacing.four, borderWidth: 1, borderColor: Colors.light.borderSubtle },
+  card: { padding: Spacing.four, borderRadius: Radius.lg, marginBottom: Spacing.four, borderWidth: 1 },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: Spacing.one },
-  cardName: { fontSize: 16, fontWeight: 'bold', color: Colors.light.text },
-  cardId: { fontSize: 13, color: Colors.light.textSecondary },
-  cardReason: { fontSize: 14, color: Colors.light.text, marginBottom: Spacing.three },
+  cardName: { fontSize: 16, fontWeight: 'bold' },
+  cardId: { fontSize: 13 },
+  cardReason: { fontSize: 14, marginBottom: Spacing.three },
   cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  badge: { backgroundColor: Colors.light.backgroundSelected, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4 },
-  badgeText: { fontSize: 12, fontWeight: '600', color: Colors.light.navy },
-  cardDate: { fontSize: 12, color: Colors.light.textMuted },
+  badge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4 },
+  badgeText: { fontSize: 12, fontWeight: '600' },
+  cardDate: { fontSize: 12 },
   
-  modalContainer: { flex: 1, backgroundColor: Colors.light.background },
-  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: Spacing.four, borderBottomWidth: 1, borderBottomColor: Colors.light.border },
-  modalTitle: { fontSize: 18, fontWeight: 'bold', color: Colors.light.text },
+  modalContainer: { flex: 1 },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: Spacing.four, borderBottomWidth: 1 },
+  modalTitle: { fontSize: 18, fontWeight: 'bold' },
   modalContent: { padding: Spacing.six },
-  detailName: { fontSize: 28, fontWeight: 'bold', color: Colors.light.navy, marginBottom: Spacing.six },
+  detailName: { fontSize: 28, fontWeight: 'bold', marginBottom: Spacing.six },
   
-  stepper: { backgroundColor: Colors.light.backgroundElement, padding: Spacing.four, borderRadius: Radius.lg, marginBottom: Spacing.six, borderWidth: 1, borderColor: Colors.light.border },
+  stepper: { padding: Spacing.four, borderRadius: Radius.lg, marginBottom: Spacing.six, borderWidth: 1 },
   stepperTitle: { fontWeight: 'bold', marginBottom: Spacing.four },
   stepRow: { flexDirection: 'row', alignItems: 'center', marginBottom: Spacing.two },
-  stepDotActive: { width: 12, height: 12, borderRadius: 6, backgroundColor: Colors.light.primary },
-  stepDot: { width: 12, height: 12, borderRadius: 6, backgroundColor: Colors.light.border },
-  stepLineActive: { flex: 1, height: 2, backgroundColor: Colors.light.primary },
-  stepLine: { flex: 1, height: 2, backgroundColor: Colors.light.border },
-  stepLabel: { fontSize: 11, color: Colors.light.textSecondary },
+  stepDotActive: { width: 12, height: 12, borderRadius: 6 },
+  stepDot: { width: 12, height: 12, borderRadius: 6 },
+  stepLineActive: { flex: 1, height: 2 },
+  stepLine: { flex: 1, height: 2 },
+  stepLabel: { fontSize: 11 },
   
   section: { marginBottom: Spacing.six },
-  sectionTitle: { fontSize: 16, fontWeight: 'bold', color: Colors.light.text, marginBottom: Spacing.two },
-  textBody: { fontSize: 15, color: Colors.light.textSecondary, lineHeight: 22 },
+  sectionTitle: { fontSize: 16, fontWeight: 'bold', marginBottom: Spacing.two },
+  textBody: { fontSize: 15, lineHeight: 22 },
   
-  actionBtn: { flexDirection: 'row', backgroundColor: Colors.light.primary, padding: Spacing.four, borderRadius: Radius.md, alignItems: 'center', justifyContent: 'center', gap: Spacing.two, marginTop: Spacing.four },
+  actionBtn: { flexDirection: 'row', padding: Spacing.four, borderRadius: Radius.md, alignItems: 'center', justifyContent: 'center', gap: Spacing.two, marginTop: Spacing.four },
   actionBtnText: { color: '#fff', fontSize: 16, fontWeight: 'bold' }
 });

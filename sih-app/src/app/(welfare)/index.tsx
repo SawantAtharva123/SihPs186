@@ -40,7 +40,7 @@ export default function WelfareDashboardScreen() {
         const res = await analyzeSignalAgreement('unit_402_aggregate', signals);
         setSignalData(res.data);
       } catch (err) {
-        console.error('Welfare ML Error:', err);
+        console.warn('Welfare ML fallback active:', err);
       } finally {
         setLoading(false);
       }

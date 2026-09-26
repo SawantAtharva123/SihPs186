@@ -2,9 +2,12 @@ import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/context/ThemeContext';
 import { Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function PersonnelLayout() {
-  const { colors, isDark } = useTheme();
+  const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
+  const bottomInset = Math.max(insets.bottom, Platform.OS === 'android' ? 14 : 8);
 
   return (
     <Tabs
@@ -15,8 +18,9 @@ export default function PersonnelLayout() {
         tabBarStyle: {
           backgroundColor: colors.backgroundElement,
           borderTopColor: colors.border,
-          height: Platform.OS === 'ios' ? 84 : 64,
-          paddingBottom: Platform.OS === 'ios' ? 24 : 8,
+          borderTopWidth: 1,
+          height: 60 + bottomInset,
+          paddingBottom: bottomInset + 4,
           paddingTop: 6,
         },
         tabBarLabelStyle: {
@@ -66,11 +70,12 @@ export default function PersonnelLayout() {
         options={{
           title: 'Support',
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'medkit' : 'medkit-outline'} size={22} color={color} />
+            <Ionicons name={focused ? 'heart' : 'heart-outline'} size={22} color={color} />
           ),
         }}
       />
-      {/* Secondary screens accessible from Dashboard & direct navigation */}
+
+      {/* Hidden from tab bar — navigated directly via Dashboard quick cards */}
       <Tabs.Screen
         name="pulse"
         options={{
@@ -82,7 +87,7 @@ export default function PersonnelLayout() {
         name="privacy"
         options={{
           href: null,
-          title: 'Data Sovereignty',
+          title: 'Privacy & Data',
         }}
       />
     </Tabs>
