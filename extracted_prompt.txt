@@ -1,0 +1,2257 @@
+SAHAYAK — MASTER DEVELOPMENT PROMPT
+ROLE
+Act as a Senior Full-Stack Mobile Application Architect, Senior React Native Engineer, Senior Backend Engineer, Senior AI/ML Engineer, Database Architect, Security Engineer, UX Engineer, and Offline-First Systems Engineer.
+You are responsible for designing and implementing the complete SAHAYAK application from the ground up.
+Do not build only a frontend prototype.
+Build a functional, modular, offline-first, privacy-conscious personnel welfare intelligence platform with:
+React Native mobile application
+Expo
+TypeScript
+Supabase
+PostgreSQL
+Supabase Auth
+Supabase Row Level Security
+Supabase Storage
+Supabase Realtime where appropriate
+Expo SQLite
+Offline synchronization engine
+Python ML service
+FastAPI
+scikit-learn
+XGBoost
+SHAP
+NetworkX where graph analysis is required
+Explainable ML
+Personal baseline modeling
+Recovery analysis
+What-if simulation
+Welfare case management
+Intervention tracking
+Aggregate organizational intelligence
+The application must work offline first and synchronize securely when connectivity becomes available.
+Do not leave major flows as fake buttons or static mockups.
+If a sophisticated ML feature cannot reasonably be implemented during the first development stage, implement a functional baseline version with a clean interface so that the ML component can later be improved without rewriting the application.
+1. PRODUCT NAME
+SAHAYAK
+Personnel Welfare Intelligence, Recovery & Intervention Platform
+Tagline
+SAHAYAK — Understand the Change. Support the Person. Improve the System.
+2. CORE PRODUCT IDEA
+SAHAYAK must NOT simply answer:
+"Is this person stressed?"
+Instead, it should answer:
+"What is normal for this person, what has changed, what factors may be contributing to the change, is the change persistent, what support or intervention could help, and did the person's condition move back toward their normal baseline afterward?"
+The system must therefore prioritize:
+PERSONAL BASELINE
+        ↓
+OBSERVE
+        ↓
+DETECT CHANGE
+        ↓
+CHECK PERSISTENCE
+        ↓
+CHECK SIGNAL AGREEMENT
+        ↓
+EXPLAIN
+        ↓
+SIMULATE
+        ↓
+INTERVENE
+        ↓
+RECOVER
+        ↓
+MEASURE OUTCOME
+        ↓
+LEARN
+Do NOT implement SAHAYAK as:
+Data → AI → Stress Score → Alert
+Implement it as:
+Person
+ ↓
+Personal Baseline
+ ↓
+Multiple Signals
+ ↓
+Deviation Detection
+ ↓
+Persistence
+ ↓
+Recovery Analysis
+ ↓
+Explainable Contributors
+ ↓
+Support
+ ↓
+Intervention
+ ↓
+Follow-up
+ ↓
+Recovery
+ ↓
+Outcome
+ ↓
+Updated Baseline
+3. IMPORTANT SAFETY AND PRODUCT PRINCIPLES
+The application is a welfare intelligence and support system, not a medical diagnosis system.
+Never diagnose:
+Depression
+Anxiety
+PTSD
+Burnout
+Any psychiatric condition
+Any medical condition
+Never label a person as:
+Mentally unstable
+Unfit
+Weak
+Dangerous
+Unreliable
+Never create public rankings.
+Never create public stress leaderboards.
+Never use a single abnormal measurement as definitive evidence.
+Never claim correlation is causation.
+Never present a model simulation as a guaranteed future prediction.
+Always communicate:
+Confidence
+Uncertainty
+Missing data
+Baseline maturity
+Signal conflicts
+Use language such as:
+"Observed change"
+"Emerging pattern"
+"Possible contributing factors"
+"Conflicting signals"
+"Additional observation may be useful"
+"Model simulation — not a guaranteed outcome."
+4. THREE APPLICATION ROLES
+Implement three role-based experiences.
+ROLE 1 — PERSONNEL
+Purpose:
+"How am I doing, what changed, why might it have changed, and what can I do to support my recovery?"
+Personnel can:
+Complete daily check-ins
+Play activities
+View personal trends
+View recovery
+Understand personal baseline
+View stressor relationships
+Run personal what-if scenarios
+Receive recovery suggestions
+Submit anonymous unit feedback
+Submit voluntary concerns
+Request support
+Use buddy support
+Manage privacy
+View who can access their information
+Work offline
+ROLE 2 — WELFARE OFFICER
+Purpose:
+"Who may need attention, what has changed, why may it have changed, and what intervention could support them?"
+Welfare officers can:
+View authorized personnel
+Review priority welfare signals
+Review emerging patterns
+Review individual trends
+Investigate root causes
+Review signal agreement
+Create welfare cases
+Plan interventions
+Run intervention simulations
+Schedule follow-ups
+Track recovery
+Record outcomes
+ROLE 3 — COMMAND / ADMINISTRATOR
+Purpose:
+"What is happening across the organization or unit, and what organizational changes could improve recovery and wellbeing?"
+Command users primarily see aggregate information.
+They can:
+View organization dashboard
+View Wellness Weather
+Analyze units
+Analyze workload
+Analyze schedule volatility
+View aggregate recovery patterns
+Explore aggregate root causes
+Run organizational what-if simulations
+Create intervention plans
+Monitor intervention outcomes
+Do NOT expose detailed personal wellness information to command users simply because of their organizational role.
+5. TECHNOLOGY STACK
+Mobile
+Use:
+React Native
+Expo
+TypeScript
+Expo Router
+Use functional components and modern React hooks.
+UI
+Prefer:
+React Native StyleSheet
+or a lightweight compatible styling system.
+The application should be:
+Responsive
+Tablet-friendly
+Mobile-friendly
+Accessible
+Clean
+Professional
+Suitable for a serious welfare application
+Do not make the UI look like a gaming app.
+6. LOCAL OFFLINE DATABASE
+Use:
+Expo SQLite
+The application must remain useful without internet connectivity.
+Local SQLite should store:
+User profile cache
+Personal trends cache
+Daily check-ins
+Activity sessions
+Activity attempts
+Local activity results
+Support requests
+Unit Pulse responses
+Voice of Personnel drafts
+Cached welfare information where authorized
+Pending synchronization records
+Notification state
+Locally generated events
+Last successful synchronization timestamp
+Sensitive data stored locally should be minimized.
+7. OFFLINE-FIRST ARCHITECTURE
+Implement:
+React Native UI
+       ↓
+Application Services
+       ↓
+Local SQLite
+       ↓
+Offline Sync Queue
+       ↓
+Connectivity Detection
+       ↓
+Supabase
+       ↓
+ML Processing
+       ↓
+Derived Results
+       ↓
+Supabase
+       ↓
+Mobile Synchronization
+The mobile application must NOT depend on the network for every interaction.
+8. OFFLINE-FIRST RULE
+For every user action, determine:
+Can this action work offline?
+If yes:
+Save locally.
+Mark as pending synchronization.
+Update UI immediately.
+Queue synchronization.
+Synchronize when connectivity returns.
+Example:
+User completes Quick Tap
+        ↓
+Result saved to SQLite
+        ↓
+UI displays completion immediately
+        ↓
+sync_status = pending
+        ↓
+Internet becomes available
+        ↓
+Upload to Supabase
+        ↓
+sync_status = synced
+Never force the user to wait for the server to complete a simple offline-capable action.
+9. SYNC ENGINE
+Create a dedicated synchronization layer.
+Example:
+mobile/offline/
+├── database.ts
+├── migrations.ts
+├── syncQueue.ts
+├── syncManager.ts
+├── connectivity.ts
+├── conflictResolver.ts
+└── retryPolicy.ts
+Each locally created record should have:
+id
+client_id
+created_at
+updated_at
+sync_status
+sync_attempts
+last_sync_error
+device_timestamp
+server_timestamp
+Possible sync states:
+pending
+syncing
+synced
+failed
+conflict
+Implement retry with exponential backoff.
+Example:
+Attempt 1 → 5 sec
+Attempt 2 → 15 sec
+Attempt 3 → 30 sec
+Attempt 4 → 60 sec
+Do not retry indefinitely without limits.
+10. CONNECTIVITY HANDLING
+Detect:
+Online
+Offline
+Reconnecting
+Display a small non-intrusive indicator.
+Example:
+● Offline
+or:
+Syncing...
+or:
+All data synced
+Do not make offline mode feel like an error.
+11. SUPABASE ARCHITECTURE
+Use Supabase for:
+Authentication
+PostgreSQL
+Row Level Security
+Storage
+Realtime
+Edge Functions where appropriate
+Do NOT expose the Supabase service-role key in the mobile application.
+Use the public client key only where appropriate.
+All sensitive access must be protected using RLS.
+12. AUTHENTICATION
+Implement:
+Login
+Logout
+Session persistence
+Role-based routing
+Password reset
+Secure session handling
+Roles:
+personnel
+welfare_officer
+command_admin
+After authentication:
+Auth
+ ↓
+Profile
+ ↓
+Role
+ ↓
+Role-specific navigation
+13. DATABASE DESIGN
+Create Supabase migrations.
+Minimum tables:
+profiles
+roles
+personnel_profiles
+units
+unit_memberships
+duty_records
+sleep_records
+recovery_records
+check_ins
+activity_sessions
+activity_attempts
+wearable_records
+environmental_records
+baseline_metrics
+deviation_events
+cumulative_load
+routine_volatility
+signal_agreement
+stressor_interactions
+support_requests
+buddy_connections
+unit_pulses
+personnel_feedback
+welfare_cases
+interventions
+intervention_outcomes
+what_if_simulations
+notifications
+audit_logs
+sync_metadata
+Use UUID primary keys.
+Use foreign keys.
+Use indexes for:
+person_id
+unit_id
+created_at
+event timestamps
+case status
+intervention status
+14. ROW LEVEL SECURITY
+Implement RLS carefully.
+Personnel
+Personnel can access their own:
+Profile
+Check-ins
+Activities
+Trends
+Recovery
+Baseline
+Support requests
+Personal simulations
+Privacy information
+They can access aggregated Unit Pulse information but not another person's private information.
+Welfare Officer
+Welfare officers can access only authorized personnel.
+Do not assume every welfare officer can access every organization.
+Implement authorization through:
+welfare_officer
+        ↓
+authorized units
+        ↓
+authorized personnel
+Command
+Command users should generally receive:
+Organization aggregates
+Unit aggregates
+Wellness Weather
+Workload trends
+Schedule trends
+Intervention outcomes
+Avoid exposing detailed individual wellness information.
+15. PERSONNEL NAVIGATION
+The personnel application must contain exactly these main tabs:
+Home
+Activities
+My Trends
+Recovery
+Unit Pulse
+Privacy
+Support
+16. PERSONNEL HOME
+Build a comprehensive overview.
+Sections:
+Greeting
+Current State
+Daily Check-in
+Today's Activities
+My Trends Preview
+Recovery Preview
+Unit Pulse Preview
+Support
+Notifications
+Example:
+GOOD MORNING
+Your wellbeing overview
+CURRENT STATE
+Emerging Change
+Confidence: Moderate
+[Complete Check-in]
+TODAY'S ACTIVITIES
+Quick Tap       Completed
+Sequence Recall Not completed
+Go / No-Go      Recommended
+[View Activities]
+MY TRENDS
+Sleep ↓
+Workload ↑
+Recovery ↓
+[View Trends]
+RECOVERY
+Recovery: Moderate
+Recovery Debt: +12
+[View Recovery]
+UNIT PULSE
+Recovery trend: Improving
+[View Unit Pulse]
+Need a check-in?
+[Get Support]
+Every card should navigate to its corresponding tab.
+17. DAILY CHECK-IN
+Target completion time:
+20–60 seconds
+Questions:
+Sleep compared with usual
+Workload compared with usual
+Energy
+Recovery
+Optional note
+Example scale:
+Much lower
+Lower
+Usual
+Higher
+Much higher
+Save offline.
+Synchronize later.
+Use data in:
+Baseline engine
+Recovery engine
+Trend analysis
+Signal agreement
+The check-in is voluntary.
+18. ACTIVITIES
+Implement these games directly using React Native.
+Do NOT use Phaser or Unity.
+Initial activities:
+QUICK TAP
+Duration:
+15–20 seconds
+Measure:
+Reaction time
+Reaction variability
+False starts
+Response consistency
+GO / NO-GO
+Duration:
+~30 seconds
+Measure:
+Attention
+Inhibition
+Reaction time
+Misses
+False alarms
+SEQUENCE RECALL
+Duration:
+30–45 seconds
+Measure:
+Working memory
+Accuracy
+Response time
+Maximum sequence length
+ODD ONE OUT
+Measure:
+Visual attention
+Accuracy
+Identification time
+DIRECTION MATCH
+Measure:
+Response speed
+Accuracy
+Reaction variability
+19. ACTIVITY ENGINE
+Every activity should record:
+activity_session_id
+person_id
+activity_type
+difficulty
+start_time
+end_time
+duration
+score
+accuracy
+average_reaction_time
+reaction_variability
+correct_answers
+incorrect_answers
+missed_answers
+difficulty_level
+Individual attempts:
+attempt_id
+session_id
+attempt_number
+stimulus
+response
+reaction_time
+correct
+timestamp
+20. ACTIVITY PERSONALIZATION
+Use historical performance to determine future activity difficulty.
+Flow:
+Previous performance
+        ↓
+Personal activity baseline
+        ↓
+Difficulty selection
+        ↓
+Activity
+        ↓
+Result
+        ↓
+Update baseline
+Do not convert activity difficulty directly into a psychological diagnosis or stress label.
+21. MY TRENDS
+Provide:
+7 Days
+30 Days
+90 Days
+All available history
+Display:
+Sleep
+Workload
+Recovery
+Duty
+Night shifts
+Rest
+Cognitive activity
+Routine volatility
+Cumulative load
+Personal baseline
+Deviations
+Early Warning Radar
+Stressor Map
+Charts must support:
+Tooltips
+Date filtering
+Tap-to-inspect
+Personal baseline overlay
+Event markers
+22. EARLY WARNING RADAR
+Display directional changes:
+Sleep variability       ↑
+Night-shift exposure    ↑
+Recovery                ↓
+Workload                ↑
+Reaction consistency    ↓
+Then:
+Emerging Change
+Do not call this a diagnosis.
+23. STRESSOR MAP
+Create an interactive graph.
+Example:
+Night Shifts
+      ↓
+Sleep
+      ↓
+Recovery
+      ↓
+Cumulative Load
+      ↓
+Current Deviation
+Allow the user to tap each node.
+Show:
+Current value
+Personal baseline
+Observed deviation
+Historical trend
+Confidence
+Use NetworkX for more advanced relationship analysis on the ML side.
+24. ROUTINE VOLATILITY ENGINE
+Calculate:
+Day/night switching
+Duty-start variability
+Duty-duration variability
+Rest variability
+Shift transitions
+Travel
+Posting changes
+Leave transitions
+Sequence unpredictability
+Possible output:
+Duty timing: Moderate volatility
+Rest timing: High volatility
+Shift transitions: High volatility
+Overall:
+Elevated routine volatility
+25. CUMULATIVE LOAD ENGINE
+Conceptual model:
+CumulativeLoad(t)
+=
+CumulativeLoad(t-1)
++
+StressExposure(t)
+-
+Recovery(t)
+This is a modeling construct, not a clinically validated metric.
+Display trajectories instead of only a single number.
+26. RECOVERY TAB
+Recovery must contain:
+Recovery Overview
+Recovery Debt
+Recovery Trajectory
+Recovery Half-Life
+Personal Baseline
+Baseline Confidence
+Why Did My Pattern Change?
+Personal What-If Simulator
+Recovery Coach
+Work-Recovery Digital Twin
+27. RECOVERY DEBT
+Concept:
+Expected Recovery - Actual Recovery
+Display:
+Today: +12
+Yesterday: +8
+3-day: +27
+Show whether the gap is:
+Accumulating
+Stable
+Reducing
+28. RECOVERY HALF-LIFE
+Estimate how quickly deviation moves approximately halfway toward baseline.
+Example:
+Deviation
+100%
+ ↓
+75%
+ ↓
+50%
+ ↓
+25%
+Display:
+Estimated recovery half-life:
+2.4 days
+Clearly label this as an analytical trajectory estimate.
+29. PERSONAL BASELINE ENGINE
+Implement a robust baseline system.
+Potential techniques:
+Rolling median
+MAD
+Standard deviation
+EWMA
+Quantile ranges
+Use robust methods when possible.
+For each metric calculate:
+baseline
+current_value
+deviation
+standardized_deviation
+confidence
+sample_count
+Concept:
+Deviation =
+Current Value - Personal Baseline
+Avoid showing raw z-scores to normal users unless useful.
+Translate them into human-readable explanations.
+30. BASELINE CONFIDENCE
+Calculate confidence based on:
+Number of observations
+Historical duration
+Data consistency
+Missing values
+Signal quality
+Example:
+Baseline Confidence: 62%
+Your personal baseline is still learning.
+Later:
+Baseline Confidence: 91%
+Your personal baseline is well established.
+Do not make strong predictions with insufficient history.
+31. WHY DID MY PATTERN CHANGE?
+Create an interactive timeline.
+Example:
+Night shifts increased
+        ↓
+Sleep decreased
+        ↓
+Rest decreased
+        ↓
+Recovery decreased
+        ↓
+Cumulative load increased
+        ↓
+Current deviation detected
+For every factor show:
+Observed data
+Possible contribution
+Evidence
+Confidence
+Time period
+Never state unsupported causal conclusions.
+32. PERSONAL WHAT-IF SIMULATOR
+Parameters:
+Sleep duration
+Workload
+Night shifts
+Recovery time
+Duty duration
+Rest intervals
+Example:
+Sleep:
+5.5h → 8h
+Workload:
+High → Moderate
+Night shifts:
+5 → 2
+Recovery time:
+1h → 4h
+[SIMULATE]
+Output:
+Current modeled burden: 68
+Scenario modeled burden: 51
+Projected trajectory:
+Improving
+Always display:
+Model simulation — not a guaranteed prediction.
+33. WORK-RECOVERY DIGITAL TWIN
+Implement a simplified computational model of:
+Duty
+Night shifts
+Sleep
+Recovery
+Training
+Leave
+Routine volatility
+Activities
+Environmental context
+Interventions
+It should be a scenario model, not a medical digital twin.
+34. RECOVERY COACH
+Provide non-medical general wellbeing suggestions.
+Example:
+Your recent recovery is below your personal baseline.
+Suggested actions:
+• Consider a short recovery break
+• Maintain a consistent sleep period
+• Complete today's check-in
+• Try a short relaxation activity
+• Consider available welfare support
+Do not provide medical treatment recommendations.
+35. UNIT PULSE
+Display aggregate unit information:
+Recovery trend
+Workload trend
+Schedule volatility
+Anonymous Pulse
+Aggregate wellbeing patterns
+Never expose individual colleagues.
+36. ANONYMOUS UNIT PULSE
+Allow personnel to submit:
+Workload
+Recovery
+Communication
+Facilities
+Schedule
+Team coordination
+Safety
+Other
+Responses should be aggregated.
+Do not reveal an individual's response to other personnel.
+Where appropriate, suppress aggregate results when the sample size is too small to reasonably protect anonymity.
+37. VOICE OF PERSONNEL
+Allow voluntary issue submission.
+Categories:
+Schedule
+Workload
+Facility
+Team
+Safety
+Welfare
+Other
+Options:
+Submit Anonymously
+Request Welfare Follow-up
+38. PRIVACY CENTER
+Display:
+Data collected
+Why it is collected
+Where it is stored
+Who can access it
+Optional data
+Wearable permissions
+Data export
+Privacy controls
+39. WHO CAN SEE WHAT?
+Create a clear privacy matrix.
+Personnel:
+Personal trends
+Recovery
+Activities
+Baseline
+Simulations
+Welfare Officer:
+Authorized welfare information
+Relevant personnel trends
+Welfare cases
+Interventions
+Command:
+Aggregate unit information
+Organization trends
+Wellness Weather
+Aggregate workload/recovery
+40. SUPPORT
+Provide:
+Request Welfare Check-in
+Contact Welfare Officer
+My Buddy
+Support Resources
+Emergency Help
+Configure emergency resources according to deployment environment.
+41. BUDDY SUPPORT
+Allow optional support circle.
+Example:
+MY SUPPORT CIRCLE
+Buddy: Available
+Welfare Officer: Available
+[Request a Check-in]
+Do not automatically expose detailed analytics to the buddy.
+42. WELFARE OFFICER NAVIGATION
+Create:
+Dashboard
+Personnel
+Welfare
+Intervention
+43. WELFARE DASHBOARD
+Display:
+Stable
+Emerging Change
+Persistent Deviation
+Sustained Concern
+Conflicting Signals
+Also provide a priority section.
+Example:
+PRIORITY PERSONNEL
+Personnel 104
+Sustained concern
+Personnel 087
+Persistent deviation
+Personnel 231
+Emerging change
+These are welfare-support states, not medical diagnoses.
+44. WELFARE OVERALL ANALYSIS
+Display:
+Recovery Pressure ↑
+Schedule Volatility ↑
+Cumulative Load ↑
+Night Shift Exposure ↑
+Unit Pulse ↓
+Then show possible observed contributors.
+Do not call them definitive causes.
+45. AI RECOMMENDATIONS FOR WELFARE OFFICER
+Example:
+Observed pattern:
+Repeated night-to-day transitions.
+Potential action:
+Review shift sequence and recovery intervals.
+Reason:
+Several related indicators show reduced recovery following this schedule pattern.
+The officer remains responsible for decisions.
+AI recommendations should never automatically trigger punitive actions.
+46. PERSONNEL TAB
+Provide:
+Search
+Filters
+Personnel List
+Priority Indicators
+Status
+Possible filters:
+All
+Emerging Change
+Persistent Deviation
+Conflicting Signals
+Sustained Concern
+47. PERSONNEL SELECTION
+Support both:
+Dashboard
+ ↓
+Priority Personnel
+ ↓
+Select Person
+and:
+Personnel
+ ↓
+Search
+ ↓
+Select Person
+Both must open the same Personnel Detail screen.
+48. WELFARE PERSONNEL DETAIL
+Display:
+Current State
+Baseline Confidence
+Emerging Patterns
+Trend Information
+Root Cause Explorer
+Operational Information
+Recovery
+Activities
+Signal Agreement
+Authorized Feedback
+Support History
+At the bottom:
++ CREATE WELFARE CASE
+49. ROOT CAUSE EXPLORER
+Example:
+Current Change
+ ├── Night shifts ↑
+ │      ↓
+ │    Sleep ↓
+ │
+ ├── Duty duration ↑
+ │
+ └── Rest ↓
+        ↓
+     Recovery ↓
+        ↓
+  Cumulative Load ↑
+Every relationship must indicate whether it is:
+Observed
+Model-derived
+Possible
+High confidence
+Low confidence
+50. SIGNAL AGREEMENT ENGINE
+Compare:
+Self-report
+Sleep
+Workload
+Activity
+Recovery
+Wearable
+Operational data
+Example:
+Self-report: Normal
+Sleep: Normal
+Workload: High
+Activity: Normal
+Wearable: Deviated
+Output:
+CONFLICTING SIGNALS
+Different data sources currently show different patterns.
+Additional observation may be useful.
+Possible states:
+Stable
+Emerging Change
+Persistent Deviation
+Conflicting Signals
+Sustained Concern
+51. STRESSOR INTERACTION ENGINE
+Model combinations such as:
+Night Shift
++
+Poor Sleep
++
+High Workload
+Create interaction features:
+A × B
+B × C
+A × C
+A × B × C
+Potential models:
+XGBoost
+Random Forest
+Regression
+Use:
+SHAP
+SHAP interaction values
+to explain model behavior.
+Never allow the model output to become a diagnosis.
+52. CREATE WELFARE CASE
+Button:
++ CREATE WELFARE CASE
+Automatically populate:
+Personnel
+Current state
+Relevant observed patterns
+Timestamp
+Form:
+Reason
+Schedule
+Recovery
+Workload
+Support
+Other
+Observed Pattern
+Possible Contributors
+Officer Notes
+Follow-up Date
+[CREATE CASE]
+53. DIRECT WELFARE CASE CREATION
+Also support:
+Welfare
+ ↓
+Create New Case
+ ↓
+Search Personnel
+ ↓
+Select Personnel
+ ↓
+Enter Details
+ ↓
+Create Case
+54. WELFARE CASE LIFECYCLE
+Implement:
+New
+ ↓
+Under Review
+ ↓
+Intervention Planned
+ ↓
+Follow-up
+ ↓
+Improving
+ ↓
+Closed
+Alternative:
+Requires Further Review
+55. INTERVENTION TAB
+Possible interventions:
+Schedule adjustment
+Recovery period
+Duty redistribution
+Training adjustment
+Welfare check-in
+Support referral
+Other
+Every intervention should contain:
+case_id
+intervention_type
+planned_date
+start_date
+end_date
+responsible_officer
+notes
+status
+56. INTERVENTION EXPERIMENT LAB
+Before implementing an intervention, allow simulation.
+Scenarios:
+Add recovery day
+Move night shift
+Delay training
+Reduce consecutive duties
+Change shift sequence
+Redistribute workload
+Output:
+Current scenario
+Alternative scenario
+Modeled trajectory
+Expected direction
+Confidence
+Clearly mark:
+SIMULATION
+NOT A GUARANTEED OUTCOME
+57. FOLLOW-UP
+Allow officer to record:
+Sleep
+Recovery
+Workload
+Activity consistency
+Observed change
+Notes
+Example:
+Recovery ↑
+Sleep ↑
+Workload →
+Activity consistency ↑
+58. RECOVERY JOURNEY
+Display:
+Before Intervention
+        ↓
+Intervention
+        ↓
+After Intervention
+        ↓
+Current State
+Example:
+Recovery before: 48
+After intervention: 61
+Current: 69
+Possible message:
+Observed movement toward personal baseline.
+Do not automatically claim causality.
+59. INTERVENTION OUTCOME
+Possible statuses:
+No observed change
+Improving
+Stable
+Requires further follow-up
+Track longitudinally.
+60. POST-INTERVENTION BASELINE
+Continue baseline monitoring after intervention.
+Example:
+Deviation:
+-24%
+ ↓
+-15%
+ ↓
+-8%
+ ↓
+-4%
+Current:
+Near personal baseline
+61. COMMAND APPLICATION
+Navigation:
+Organization Dashboard
+Unit
+62. ORGANIZATION DASHBOARD
+Display:
+Wellness Weather
+Unit Overview
+Organization Trends
+Recovery Pressure
+Schedule Volatility
+Cumulative Load
+Workload
+Unit Pulse
+Intervention Outcomes
+Only aggregate information.
+63. WELLNESS WEATHER
+Example:
+North Zone
+Stable
+Central Operations
+Emerging Change
+Training Wing
+Elevated Recovery Pressure
+Deployment Unit
+Improving
+Make this visually similar to a weather dashboard.
+Do not imply that a unit is medically unhealthy.
+64. ORGANIZATION TREND SUMMARY
+Display:
+Recovery Pressure ↑
+Schedule Volatility ↑
+Cumulative Load →
+Workload ↑
+Unit Pulse ↓
+Include time period.
+Example:
+Compared with previous 30 days
+65. COMMAND UNIT FLOW
+Organization Dashboard
+        ↓
+Select Unit
+        ↓
+Unit
+Unit sections:
+Trend Analysis
+Schedule & Workload
+Root Causes
+What-If Situations
+Intervention Planning
+Outcome Monitoring
+66. UNIT TREND ANALYSIS
+Metrics:
+Recovery
+Workload
+Duty hours
+Night shifts
+Schedule volatility
+Rest
+Cumulative Load
+Unit Pulse
+Aggregate activity trends
+Time periods:
+7 days
+30 days
+90 days
+6 months
+67. UNIT SCHEDULE & WORKLOAD
+Display:
+Duty hours
+Night shift frequency
+Consecutive duties
+Rest intervals
+Training load
+Deployment periods
+Schedule volatility
+Example:
+Night shifts: +18%
+Average rest: -12%
+Duty variability: +21%
+Consecutive duty: +9%
+Always show the comparison period.
+68. UNIT ROOT CAUSE ANALYSIS
+Example:
+Unit Pattern
+ ├── Night shift frequency ↑
+ ├── Rest intervals ↓
+ ├── Workload ↑
+ └── Schedule volatility ↑
+          ↓
+    Recovery Pressure ↑
+69. UNIT WHAT-IF
+Scenarios:
+Reduce night shifts
+Increase recovery intervals
+Move training
+Redistribute workload
+Change shift sequence
+Display modeled trajectories.
+Example:
+Current: 72
+Scenario A: 58
+Scenario B: 61
+Scenario C: 64
+Scenario D: 60
+Never present this as guaranteed.
+70. UNIT INTERVENTION PLANNING
+Example:
+Observed issue:
+High schedule volatility
+Potential action:
+Review shift sequence and recovery intervals
+Target:
+Central Operations
+Duration:
+14 days
+Allow creation of intervention plan.
+71. UNIT OUTCOME MONITORING
+Track:
+Before
+Intervention
+After
+Current
+Example:
+Recovery Pressure:
+72 → 64
+Schedule Volatility:
+High → Moderate
+Unit Pulse:
+61 → 70
+Status:
+Observed improvement
+Use careful causal language.
+72. PERSONAL BASELINE ML ENGINE
+Build a dedicated Python module.
+Structure:
+ml-service/
+├── baseline/
+│   ├── rolling_baseline.py
+│   ├── robust_baseline.py
+│   ├── ewma.py
+│   └── confidence.py
+Implement baseline calculation for:
+Sleep
+Workload
+Recovery
+Duty
+Night shifts
+Rest
+Activity performance
+Return:
+{
+  "metric": "sleep",
+  "baseline": 7.1,
+  "current": 5.6,
+  "deviation": -1.5,
+  "confidence": 0.87,
+  "sample_count": 42
+}
+73. DEVIATION ENGINE
+Create:
+anomaly/
+├── deviation.py
+├── persistence.py
+└── thresholds.py
+Detect:
+Normal
+Emerging Change
+Persistent Deviation
+Sustained Concern
+Use:
+Personal baseline
+Magnitude
+Duration
+Frequency
+Repeated deviation
+Do not trigger severe states from one measurement.
+74. RECOVERY ENGINE
+Create:
+recovery/
+├── recovery_score.py
+├── recovery_debt.py
+├── trajectory.py
+├── half_life.py
+└── intervention_recovery.py
+Inputs:
+Sleep
+Rest
+Workload
+Duty
+Check-ins
+Activities
+Baseline deviation
+Intervention events
+Outputs:
+recovery state
+recovery debt
+recovery trajectory
+recovery half-life
+confidence
+75. ROUTINE VOLATILITY ENGINE
+Calculate:
+shift transition rate
+duty start variance
+duty duration variance
+rest variance
+day/night switching
+sequence entropy
+travel/posting transitions
+Return interpretable metrics.
+76. SIGNAL AGREEMENT ENGINE
+Implement a signal fusion module.
+Example:
+self_report = normal
+sleep = normal
+workload = high
+activity = normal
+wearable = abnormal
+Calculate:
+agreement level
+conflict level
+missing signal count
+confidence
+Possible result:
+conflicting_signals
+rather than artificially forcing a single risk category.
+77. STRESSOR INTERACTION MODEL
+Create feature engineering:
+night_shift × poor_sleep
+poor_sleep × high_workload
+night_shift × high_workload
+night_shift × poor_sleep × high_workload
+Train a suitable model when enough data exists.
+For competition/demo data, synthetic datasets may be used.
+Never claim the model is clinically validated.
+78. ML SERVICE API
+Use FastAPI.
+Endpoints:
+GET  /health
+POST /baseline/update
+POST /baseline/calculate
+POST /deviation/analyze
+POST /recovery/analyze
+POST /routine-volatility/analyze
+POST /signal-agreement/analyze
+POST /stressor-interaction/analyze
+POST /explain/person
+POST /simulate/person
+POST /simulate/unit
+POST /intervention/analyze
+POST /recommendations/welfare
+Every response should contain:
+data
+confidence
+warnings
+model_version
+generated_at
+79. EXPLAINABILITY
+Create:
+explainability/
+├── shap_explainer.py
+├── contributor_engine.py
+├── explanation_formatter.py
+└── uncertainty.py
+Convert model output into understandable explanations.
+Example:
+Instead of:
+SHAP:
+night_shift = 0.42
+sleep = -0.31
+Display:
+Possible contributors to the current change:
+1. Increased night-shift exposure
+2. Reduced sleep relative to personal baseline
+3. Higher workload
+Confidence:
+Moderate
+80. AI RECOMMENDATION ENGINE
+Recommendations should be:
+Evidence-aware
+Non-diagnostic
+Non-punitive
+Human-reviewable
+Explainable
+Example:
+Observed:
+Repeated night-to-day transitions.
+Potential consideration:
+Review shift sequence and recovery interval.
+Why:
+Recovery has repeatedly decreased after similar schedule patterns.
+Do not automatically execute an intervention.
+81. WHAT-IF ENGINE
+Implement a scenario simulator.
+Inputs:
+baseline
+current state
+schedule
+sleep
+workload
+rest
+intervention
+Simulate:
+current scenario
+alternative scenario
+Return:
+{
+  "scenario": "additional_recovery_day",
+  "trajectory": [],
+  "direction": "improving",
+  "confidence": 0.71,
+  "warning": "Model simulation — not a guaranteed outcome."
+}
+82. SYNTHETIC DATA
+Create realistic synthetic data for development and demonstration.
+Generate:
+Personnel
+Units
+Duty records
+Sleep
+Recovery
+Check-ins
+Activities
+Night shifts
+Workload
+Routine changes
+Interventions
+Outcomes
+Include several scenarios:
+Scenario A — Stable
+Normal baseline.
+Scenario B — Emerging Change
+Gradual deviation.
+Scenario C — Persistent Deviation
+Repeated abnormal pattern.
+Scenario D — Conflicting Signals
+Different sources disagree.
+Scenario E — Recovery After Intervention
+Deviation followed by gradual movement toward baseline.
+Scenario F — High Schedule Volatility
+Frequent shift transitions.
+Use these scenarios to demonstrate SAHAYAK during testing.
+83. MODEL TRAINING
+Do not train complex ML models blindly on tiny datasets.
+First establish:
+baseline algorithms
++
+rule-based persistence
++
+interpretable statistical methods
+Then introduce:
+XGBoost
+Random Forest
+Regression
+when sufficient data exists.
+Use proper:
+train
+validation
+test
+splits.
+Avoid leakage.
+For longitudinal personnel data, consider person-aware/time-aware validation.
+Report:
+precision
+recall
+F1
+ROC-AUC where appropriate
+PR-AUC where appropriate
+calibration
+false positive rate
+false negative rate
+Do not optimize solely for a single "risk accuracy" number.
+84. DATA QUALITY
+The ML pipeline must explicitly handle:
+Missing data
+Delayed data
+Duplicate records
+Outliers
+Offline synchronization
+Device timestamp differences
+Sparse history
+Conflicting signals
+Never silently fill important missing values without documenting the method.
+85. WEARABLE SUPPORT
+Wearables are optional.
+Potential future integrations:
+Android Health Connect
+Apple HealthKit
+Possible signals:
+Sleep
+Resting HR
+HRV
+Activity
+Recovery-related metrics
+The application must work fully without wearable data.
+If wearable data is unavailable:
+Wearable signal:
+Not available
+Do not treat missing wearable data as abnormal.
+86. ENVIRONMENTAL CONTEXT
+Optionally support:
+Temperature
+Humidity
+Heat exposure
+Travel
+Deployment environment
+Working conditions
+Environmental context should be used as context rather than diagnostic evidence.
+87. NOTIFICATION SYSTEM
+Notifications may include:
+Personnel:
+Daily check-in reminder
+Activity reminder
+Recovery insight
+Support response
+Sync completed
+Welfare Officer:
+New priority review
+Follow-up due
+Case update
+Command:
+Unit trend update
+Intervention outcome available
+Avoid alarmist notification language.
+88. AUDIT LOGGING
+Record security-sensitive actions:
+Login
+Logout
+Profile access
+Personnel record access
+Welfare case creation
+Intervention creation
+Data export
+Privacy changes
+Role changes
+Administrative actions
+Store:
+actor_id
+action
+resource_type
+resource_id
+timestamp
+metadata
+Do not store unnecessary sensitive content inside logs.
+89. OFFLINE SECURITY
+Local SQLite data should be protected as much as practical.
+Do not store:
+Supabase service-role credentials
+ML service secrets
+Administrative secrets
+Use secure storage for authentication/session-related secrets.
+When possible, encrypt sensitive local storage.
+90. API SECURITY
+Use:
+HTTPS
+Authentication
+Authorization
+Request validation
+Rate limiting where appropriate
+Input sanitization
+Server-side permission checks
+Never trust role information supplied by the mobile client alone.
+91. UI DESIGN PRINCIPLES
+The interface should communicate:
+Calm
+Trust
+Privacy
+Clarity
+Support
+Professionalism
+Avoid:
+Red-heavy alarming dashboards
+Gamified risk scores
+Fear-inducing warnings
+Public rankings
+Excessive animations
+Use visual hierarchy.
+Important states:
+Stable
+Improving
+Emerging Change
+Conflicting Signals
+Persistent Deviation
+Sustained Concern
+92. PERSONNEL DASHBOARD VISUALIZATION
+Prioritize:
+What changed?
+Why might it have changed?
+What can I do?
+rather than:
+Your score = 73
+Use:
+Trend cards
+Timeline
+Graphs
+Relationship diagrams
+Progress indicators
+Recovery journey
+Baseline overlays
+93. WELFARE OFFICER DASHBOARD VISUALIZATION
+Prioritize:
+Who needs review?
+What changed?
+What are possible contributors?
+What can be considered?
+Did the intervention help?
+94. COMMAND DASHBOARD VISUALIZATION
+Prioritize:
+Where are organizational patterns changing?
+What factors are changing?
+What units require organizational review?
+What interventions are being monitored?
+What happened afterward?
+95. ERROR HANDLING
+Every API and database operation must have:
+Loading
+Success
+Empty
+Offline
+Error
+Retry
+Do not leave screens blank.
+Example:
+Unable to synchronize right now.
+Your information is safely stored locally and will be synchronized when connectivity returns.
+96. EMPTY STATES
+Create meaningful empty states.
+Example:
+Your personal baseline is still learning.
+Continue using SAHAYAK over time to build a more useful picture of your normal patterns.
+For insufficient history:
+Not enough history yet.
+More observations are needed before this trend can be interpreted reliably.
+97. MODEL CONFIDENCE UI
+Every ML-derived insight should be able to expose:
+Confidence
+Data availability
+Historical sample size
+Model version
+Last updated
+Do not expose complicated technical values unless the user requests them.
+98. MODEL VERSIONING
+Every ML result should contain:
+model_name
+model_version
+generated_at
+input_data_timestamp
+confidence
+This allows future model improvements without losing traceability.
+99. DATABASE DERIVED DATA
+Separate:
+raw observations
+from:
+derived analytical results
+Example:
+sleep_records
+should remain separate from:
+baseline_metrics
+deviation_events
+recovery_records
+Never overwrite raw observations with ML outputs.
+100. REALTIME
+Use Supabase Realtime only where it provides meaningful value.
+Examples:
+Welfare case updates
+Intervention updates
+Support request status
+Unit dashboard refresh
+Do not unnecessarily stream sensitive data continuously.
+101. DATA FLOW — PERSONNEL
+Personnel
+ ↓
+Daily Check-in
+ ↓
+SQLite
+ ↓
+Sync Queue
+ ↓
+Supabase
+ ↓
+ML Service
+ ↓
+Baseline
+ ↓
+Deviation
+ ↓
+Recovery
+ ↓
+Signal Agreement
+ ↓
+Derived Results
+ ↓
+Supabase
+ ↓
+Personnel Dashboard
+102. DATA FLOW — WELFARE
+Operational Data
++
+Personal Signals
++
+ML Analysis
+        ↓
+Welfare Dashboard
+        ↓
+Priority Personnel
+        ↓
+Personnel Detail
+        ↓
+Root Cause Explorer
+        ↓
+Welfare Case
+        ↓
+Intervention
+        ↓
+Follow-up
+        ↓
+Recovery Journey
+        ↓
+Outcome
+        ↓
+Post-intervention Monitoring
+103. DATA FLOW — COMMAND
+Personnel/Operational Aggregates
+        ↓
+Unit Aggregation
+        ↓
+Organization Dashboard
+        ↓
+Wellness Weather
+        ↓
+Unit Selection
+        ↓
+Trend Analysis
+        ↓
+Root Cause Analysis
+        ↓
+What-if
+        ↓
+Intervention Planning
+        ↓
+Outcome Monitoring
+104. COMPLETE CLOSED LOOP
+OBSERVE
+   ↓
+PERSONALIZE
+   ↓
+DETECT
+   ↓
+EXPLAIN
+   ↓
+SIMULATE
+   ↓
+INTERVENE
+   ↓
+RECOVER
+   ↓
+LEARN
+Learning means:
+New data
+ ↓
+Updated baseline
+ ↓
+Improved personalization
+ ↓
+Improved future interpretation
+Do not permanently label personnel.
+105. PROJECT STRUCTURE
+Use:
+sahayak/
+├── mobile/
+│   ├── app/
+│   │   ├── (auth)/
+│   │   ├── (personnel)/
+│   │   │   ├── home/
+│   │   │   ├── activities/
+│   │   │   ├── trends/
+│   │   │   ├── recovery/
+│   │   │   ├── unit-pulse/
+│   │   │   ├── privacy/
+│   │   │   └── support/
+│   │   ├── (welfare)/
+│   │   │   ├── dashboard/
+│   │   │   ├── personnel/
+│   │   │   ├── welfare/
+│   │   │   └── intervention/
+│   │   └── (command)/
+│   │       ├── organization/
+│   │       └── units/
+│   │
+│   ├── components/
+│   ├── screens/
+│   ├── services/
+│   ├── hooks/
+│   ├── utils/
+│   ├── types/
+│   ├── offline/
+│   │   ├── database.ts
+│   │   ├── migrations.ts
+│   │   ├── syncQueue.ts
+│   │   ├── syncManager.ts
+│   │   ├── connectivity.ts
+│   │   └── conflictResolver.ts
+│   └── assets/
+│
+├── ml-service/
+│   ├── api/
+│   ├── baseline/
+│   ├── anomaly/
+│   ├── recovery/
+│   ├── volatility/
+│   ├── signal_agreement/
+│   ├── stressor_interaction/
+│   ├── explainability/
+│   ├── simulation/
+│   ├── recommendations/
+│   ├── data/
+│   ├── models/
+│   └── requirements.txt
+│
+├── supabase/
+│   ├── migrations/
+│   ├── functions/
+│   └── seed/
+│
+├── data/
+│   ├── synthetic/
+│   └── scenarios/
+│
+├── docs/
+│
+└── README.md
+106. DEVELOPMENT ORDER
+Do not attempt to implement everything randomly.
+Build in phases.
+PHASE 1 — FOUNDATION
+Implement:
+Expo project
+TypeScript
+Expo Router
+Authentication
+Role-based navigation
+Supabase connection
+Database migrations
+RLS
+Basic UI system
+PHASE 2 — OFFLINE CORE
+Implement:
+SQLite
+Local repository pattern
+Sync queue
+Connectivity detection
+Retry mechanism
+Conflict handling
+Offline banners
+Cached data
+Verify offline functionality before proceeding.
+PHASE 3 — PERSONNEL
+Implement:
+Home
+Check-in
+Activities
+My Trends
+Recovery
+Unit Pulse
+Privacy
+Support
+PHASE 4 — ACTIVITIES
+Implement:
+Quick Tap
+Go/No-Go
+Sequence Recall
+Odd One Out
+Direction Match
+Activity result storage
+Activity baseline
+PHASE 5 — ML FOUNDATION
+Implement:
+Personal baseline
+Baseline confidence
+Deviation
+Persistence
+Recovery
+Routine volatility
+Signal agreement
+Initially use interpretable statistical methods.
+PHASE 6 — ML ADVANCED
+Implement:
+XGBoost
+Stressor interaction
+SHAP
+Root cause explanation
+Recommendation engine
+What-if simulation
+PHASE 7 — WELFARE OFFICER
+Implement:
+Dashboard
+Priority personnel
+Personnel search
+Personnel detail
+Root Cause Explorer
+Signal Agreement
+Welfare case
+Intervention
+Follow-up
+Recovery Journey
+Outcome
+PHASE 8 — COMMAND
+Implement:
+Organization Dashboard
+Wellness Weather
+Unit analysis
+Schedule/workload
+Root causes
+What-if
+Intervention planning
+Outcome monitoring
+PHASE 9 — HARDENING
+Implement:
+Security review
+RLS review
+Offline testing
+Sync conflict testing
+ML validation
+Error handling
+Accessibility
+Performance optimization
+Audit logging
+107. TESTING
+Create tests for:
+Mobile
+Authentication
+Navigation
+Activities
+Check-in
+Offline functionality
+Sync
+Recovery screens
+Privacy
+Role routing
+Database
+RLS
+Foreign keys
+Constraints
+Authorization
+ML
+Baseline calculation
+Deviation
+Persistence
+Recovery
+Signal agreement
+Simulation
+Missing data
+Sync
+Test:
+Offline → create record → online → sync
+Offline → multiple records → online → sync
+Offline → network interruption → retry
+Duplicate sync
+Conflict
+108. DEMO MODE
+Create a development/demo mode using synthetic data.
+Provide:
+Demo Personnel
+Demo Welfare Officer
+Demo Command Admin
+Allow switching roles during development without compromising production authorization.
+Create realistic sample scenarios.
+109. DEMO SCENARIO
+Create one strong end-to-end scenario:
+Personnel
+ ↓
+Repeated night shifts
+ ↓
+Sleep decreases
+ ↓
+Recovery decreases
+ ↓
+Routine volatility increases
+ ↓
+Activity response variability increases
+ ↓
+Personal baseline detects deviation
+ ↓
+Persistence detected
+ ↓
+Welfare Officer sees emerging pattern
+ ↓
+Root Cause Explorer
+ ↓
+Create Welfare Case
+ ↓
+What-if simulation
+ ↓
+Schedule/recovery intervention
+ ↓
+Follow-up
+ ↓
+Recovery improves
+ ↓
+Baseline deviation decreases
+ ↓
+Outcome recorded
+This should be fully demonstrable.
+110. PERFORMANCE TARGETS
+Suggested MVP targets:
+Local UI response:
+<100 ms where practical
+Screen transition:
+<300 ms where practical
+Normal database/API request:
+<2 seconds
+Dashboard:
+<3 seconds when online
+Offline actions:
+Immediate local response
+Do not sacrifice correctness or security simply to meet these targets.
+111. ACCESSIBILITY
+Implement:
+Adequate text sizes
+Touch targets
+Screen-reader labels
+Good contrast
+Reduced motion considerations
+Clear error messages
+Avoid color-only meaning
+For example:
+Do not represent:
+Red = concern
+Green = stable
+without text labels.
+112. DOCUMENTATION
+Create:
+README.md
+ARCHITECTURE.md
+DATABASE.md
+ML.md
+OFFLINE_SYNC.md
+SECURITY.md
+API.md
+TESTING.md
+Document:
+Setup
+Environment variables
+Supabase configuration
+Database migrations
+ML service startup
+Mobile startup
+Demo accounts
+Synthetic data generation
+Offline architecture
+Deployment
+113. ENVIRONMENT VARIABLES
+Never hardcode secrets.
+Use:
+.env
+for development.
+Example:
+EXPO_PUBLIC_SUPABASE_URL=
+EXPO_PUBLIC_SUPABASE_ANON_KEY=
+ML_SERVICE_URL=
+Do NOT put:
+SUPABASE_SERVICE_ROLE_KEY
+inside the mobile application.
+114. CODE QUALITY
+Follow:
+TypeScript strict mode
+Modular architecture
+Reusable components
+Service/repository separation
+Strong typing
+Input validation
+Error handling
+No duplicated business logic
+No giant components
+No hardcoded production secrets
+Avoid putting database calls directly inside every UI component.
+Use service layers.
+115. IMPORTANT ARCHITECTURAL RULE
+Keep these layers separate:
+UI
+ ↓
+Application Services
+ ↓
+Repositories
+ ↓
+SQLite / Supabase
+ML:
+Application
+ ↓
+ML API
+ ↓
+ML Engine
+ ↓
+Derived Results
+Do not put Python ML logic inside React Native.
+Do not make the mobile application directly execute complex ML models unless there is a strong reason.
+116. FINAL ACCEPTANCE CRITERIA
+The project is considered complete only when:
+Personnel
+Login works
+Home works
+Check-in works
+Activities work
+Activities work offline
+Trends work
+Recovery works
+Baseline works
+Stressor Map works
+What-if works
+Unit Pulse works
+Privacy works
+Support works
+Welfare
+Dashboard works
+Priority personnel work
+Search works
+Personnel detail works
+Root Cause Explorer works
+Welfare case works
+Intervention works
+Follow-up works
+Recovery Journey works
+Outcome works
+Command
+Organization dashboard works
+Wellness Weather works
+Unit selection works
+Unit trends work
+Schedule analysis works
+Root causes work
+What-if works
+Intervention planning works
+Outcome monitoring works
+ML
+Personal baseline works
+Baseline confidence works
+Deviation works
+Persistence works
+Recovery works
+Routine volatility works
+Signal agreement works
+Stressor interaction works
+Explainability works
+What-if simulation works
+Offline
+Application launches without internet
+Check-in works offline
+Activities work offline
+Local data is retained
+Sync queue works
+Reconnection sync works
+Failed sync retries
+Duplicate records are prevented
+Cached information is available
+Security
+Authentication works
+RLS works
+Personnel isolation works
+Welfare authorization works
+Command aggregate restrictions work
+Secrets are not exposed
+Audit logging works
+117. FINAL PRODUCT PHILOSOPHY
+The finished application should feel like a complete welfare ecosystem, not a stress calculator.
+The final system should connect:
+PERSONAL EXPERIENCE
+        ↓
+PERSONAL BASELINE
+        ↓
+WORK + RECOVERY DATA
+        ↓
+ACTIVITIES
+        ↓
+ML ANALYSIS
+        ↓
+EXPLANATION
+        ↓
+PERSONAL SUPPORT
+        ↓
+WELFARE OFFICER
+        ↓
+WELFARE CASE
+        ↓
+INTERVENTION
+        ↓
+FOLLOW-UP
+        ↓
+RECOVERY
+        ↓
+ORGANIZATIONAL LEARNING
+        ↓
+COMMAND / UNIT INTELLIGENCE
+The core philosophy is:
+UNDERSTAND THE CHANGE
+SUPPORT THE PERSON
+IMPROVE THE SYSTEM
+Build the application around this philosophy from the database layer to the UI layer to the ML layer.
+Do not remove important flows simply to make the implementation easier.
+Where implementation complexity is high, create a clean modular abstraction and implement a reliable MVP version first.
+The architecture must allow future replacement of individual ML algorithms, wearable providers, synchronization strategies, and recommendation models without requiring a complete rewrite of the application.

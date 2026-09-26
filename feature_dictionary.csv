@@ -1,0 +1,34 @@
+Column_Name,Description,Data_Type,Example_Value,Allowed_Range,Used_For_ML,Reason
+Employee_ID,Anonymized synthetic personnel identifier,Categorical (ID),CAPF-100001,Unique string,NO,"Identifier only, not predictive"
+Age,Age in years,Numeric,34,20-58,YES,Demographic risk factor
+Gender,Self-identified gender,Categorical,Male,Male/Female,YES,Demographic factor
+Marital_Status,Marital status,Categorical,Married,Single/Married/Divorced-Separated/Widowed,YES,Correlates with support/financial stress
+Num_Dependents,Number of dependents,Numeric,2,0-6,YES,Financial/family load indicator
+Rank,Current rank,Categorical,Head Constable,"8 ranks, Constable to Commandant",YES,Seniority/responsibility proxy
+Years_of_Service,"Years served, consistent with age & rank",Numeric,9,0-38,YES,Experience/tenure factor
+Current_Deployment_Type,Nature of current posting,Categorical,Border Guarding,8 deployment types,YES,Operational context
+Deployment_Risk_Category,Derived hazard grouping of deployment type,Categorical,Hazardous,Hazardous/Non-Hazardous,YES,Simplified operational risk flag
+Deployment_Duration_Months,Months in current deployment,Numeric,14,1-48,YES,Exposure duration
+Family_Separation_Months,Months separated from family due to posting,Numeric,11,0-48,YES,Psychosocial strain factor
+Transfers_Last_5Yrs,Number of postings/transfers in last 5 years,Numeric,2,0-10,YES,Instability indicator
+Combat_Exposure_Incidents,Count of combat/high-risk incidents,Numeric,3,0-15,YES,Trauma exposure proxy
+Duty_Hours_Per_Week,Average weekly duty hours,Numeric,52,36-84,YES,Core workload measure
+Night_Shifts_Per_Month,Night shifts worked per month,Numeric,7,0-26,YES,Sleep-disruptive workload
+Training_Hours_Last_Quarter,Training hours in last quarter,Numeric,38,0-120,YES,Additional workload/engagement
+Absenteeism_Rate_Pct,Percentage of duty days absent,Numeric,3.2,0-25,YES,Behavioral withdrawal signal
+Leave_Entitled_Days,Annual leave entitlement,Numeric,30,Fixed at 30,NO,"Constant reference value, no variance"
+Leave_Taken_Last_Year,Leave days actually taken,Numeric,18,0-30 (capped at entitlement),YES,Recovery/rest indicator
+Leave_Pattern_Irregular,Flag for irregular/inconsistent leave-taking,Categorical,No,Yes/No,YES,Recovery-behavior signal
+Sick_Leave_Days,Sick leave days taken in last year,Numeric,5,0-45,YES,Health/strain proxy
+Medical_Consultations_Last_Year,Number of medical consultations,Numeric,3,0-18,YES,Health-seeking behavior
+Prior_Counseling_Sessions,Past voluntary counseling sessions attended,Numeric,1,0-10,YES,Help-seeking history
+Disciplinary_Incidents_Last_Year,Disciplinary incidents in last year,Numeric,0,0-6,YES,Behavioral strain indicator
+Financial_Stress_Level,Self-reported financial stress band,Categorical,Moderate,Low/Moderate/High,YES,Non-operational stressor
+Sleep_Quality_Score_1to10,Self-reported sleep quality,Numeric,6,1-10,YES,Core wellbeing indicator
+Peer_Support_Score_1to10,Self-reported peer/unit support,Numeric,7,1-10,YES,Protective factor
+Wellness_Survey_Score_1to10,Composite voluntary wellness survey score,Numeric,6,1-10,YES,Core wellbeing indicator
+Workload_Index_0to1,Normalized composite workload index,Numeric,0.58,0-1,YES,Engineered workload summary
+Self_Reported_Stress_Level,Voluntary self-reported stress level,Categorical,Medium,Low/Medium/High/Critical,YES,"Correlated with but distinct from target; useful predictive signal, not a copy of it"
+Welfare_Intervention_Flag,Whether a welfare intervention was probabilistically triggered,Categorical,Yes,Yes/No,NO,Outcome-adjacent field derived from target; would leak the label
+Burnout_Risk_Score_0to100,Synthetic numeric burnout score from a noisy latent draw,Numeric,64,0-100,NO,"Outcome-related score; correlated with but not identical to target derivation, potential leakage if used as a feature"
+Stress_Risk_Category,Target welfare/stress pattern category,Categorical,High,Low/Medium/High/Critical,YES (TARGET),Primary prediction target
