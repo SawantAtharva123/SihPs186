@@ -5,23 +5,26 @@ import {
   PressableProps,
   StyleProp,
   ViewStyle,
-  Platform,
+  StyleSheet,
 } from 'react-native';
 
 interface BouncyPressableProps extends PressableProps {
   children: React.ReactNode;
   scaleTo?: number;
   style?: StyleProp<ViewStyle>;
+  containerStyle?: StyleProp<ViewStyle>;
 }
 
 export default function BouncyPressable({
   children,
   scaleTo = 0.96,
   style,
+  containerStyle,
   onPress,
   ...props
 }: BouncyPressableProps) {
   const scale = useRef(new Animated.Value(1)).current;
+  const flatStyle = StyleSheet.flatten(style) || {};
 
   const handlePressIn = () => {
     Animated.spring(scale, {
@@ -41,11 +44,16 @@ export default function BouncyPressable({
     }).start();
   };
 
+  const autoContainerStyle: ViewStyle = {};
+  if (flatStyle.flex !== undefined) autoContainerStyle.flex = flatStyle.flex;
+  if (flatStyle.alignSelf !== undefined) autoContainerStyle.alignSelf = flatStyle.alignSelf;
+
   return (
     <Pressable
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
       onPress={onPress}
+      style={[autoContainerStyle, containerStyle]}
       {...props}
     >
       <Animated.View style={[style, { transform: [{ scale }] }]}>

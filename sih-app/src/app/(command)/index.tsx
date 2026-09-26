@@ -33,20 +33,57 @@ export default function CommandDashboardScreen() {
             <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>WELLNESS WEATHER</Text>
           </View>
           <View style={styles.grid}>
-            {units.map((u, i) => (
+            <View style={styles.gridRow}>
               <BouncyPressable
-                key={i}
-                style={[styles.weatherCard, { backgroundColor: u.bg, borderColor: u.color + '40' }]}
+                style={[styles.weatherCard, { backgroundColor: units[0].bg, borderColor: units[0].color + '40' }]}
                 onPress={() => router.push('/(command)/units')}
               >
                 <View style={styles.weatherCardHeader}>
-                  <Ionicons name={u.icon as any} size={24} color={u.color} />
-                  <Text style={[styles.weatherState, { color: u.color }]}>{u.state}</Text>
+                  <Ionicons name={units[0].icon as any} size={22} color={units[0].color} />
+                  <Text style={[styles.weatherState, { color: units[0].color }]} numberOfLines={1}>{units[0].state}</Text>
                 </View>
-                <Text style={[styles.weatherUnitName, { color: colors.text }]}>{u.name}</Text>
-                <Text style={[styles.weatherDesc, { color: colors.textSecondary }]}>{u.desc}</Text>
+                <Text style={[styles.weatherUnitName, { color: colors.text }]} numberOfLines={1}>{units[0].name}</Text>
+                <Text style={[styles.weatherDesc, { color: colors.textSecondary }]} numberOfLines={2}>{units[0].desc}</Text>
               </BouncyPressable>
-            ))}
+
+              <BouncyPressable
+                style={[styles.weatherCard, { backgroundColor: units[1].bg, borderColor: units[1].color + '40' }]}
+                onPress={() => router.push('/(command)/units')}
+              >
+                <View style={styles.weatherCardHeader}>
+                  <Ionicons name={units[1].icon as any} size={22} color={units[1].color} />
+                  <Text style={[styles.weatherState, { color: units[1].color }]} numberOfLines={1}>{units[1].state}</Text>
+                </View>
+                <Text style={[styles.weatherUnitName, { color: colors.text }]} numberOfLines={1}>{units[1].name}</Text>
+                <Text style={[styles.weatherDesc, { color: colors.textSecondary }]} numberOfLines={2}>{units[1].desc}</Text>
+              </BouncyPressable>
+            </View>
+
+            <View style={styles.gridRow}>
+              <BouncyPressable
+                style={[styles.weatherCard, { backgroundColor: units[2].bg, borderColor: units[2].color + '40' }]}
+                onPress={() => router.push('/(command)/units')}
+              >
+                <View style={styles.weatherCardHeader}>
+                  <Ionicons name={units[2].icon as any} size={22} color={units[2].color} />
+                  <Text style={[styles.weatherState, { color: units[2].color }]} numberOfLines={1}>{units[2].state}</Text>
+                </View>
+                <Text style={[styles.weatherUnitName, { color: colors.text }]} numberOfLines={1}>{units[2].name}</Text>
+                <Text style={[styles.weatherDesc, { color: colors.textSecondary }]} numberOfLines={2}>{units[2].desc}</Text>
+              </BouncyPressable>
+
+              <BouncyPressable
+                style={[styles.weatherCard, { backgroundColor: units[3].bg, borderColor: units[3].color + '40' }]}
+                onPress={() => router.push('/(command)/units')}
+              >
+                <View style={styles.weatherCardHeader}>
+                  <Ionicons name={units[3].icon as any} size={22} color={units[3].color} />
+                  <Text style={[styles.weatherState, { color: units[3].color }]} numberOfLines={1}>{units[3].state}</Text>
+                </View>
+                <Text style={[styles.weatherUnitName, { color: colors.text }]} numberOfLines={1}>{units[3].name}</Text>
+                <Text style={[styles.weatherDesc, { color: colors.textSecondary }]} numberOfLines={2}>{units[3].desc}</Text>
+              </BouncyPressable>
+            </View>
           </View>
         </View>
       </FadeInView>
@@ -95,8 +132,10 @@ export default function CommandDashboardScreen() {
             onPress={() => router.push('/(command)/units')}
           >
             <View style={styles.outcomeHeader}>
-              <Text style={[styles.outcomeUnit, { color: colors.text }]}>Training Wing: Shift Adjustment</Text>
-              <View style={[styles.badge, { backgroundColor: isDark ? 'rgba(46, 204, 113, 0.15)' : colors.successBg }]}>
+              <Text style={[styles.outcomeUnit, { color: colors.text }]} numberOfLines={1}>
+                Training Wing: Shift Adjustment
+              </Text>
+              <View style={[styles.badge, { backgroundColor: isDark ? 'rgba(46, 204, 113, 0.2)' : colors.successBg }]}>
                 <Text style={[styles.badgeText, { color: colors.success }]}>Observed Improvement</Text>
               </View>
             </View>
@@ -122,12 +161,13 @@ const styles = StyleSheet.create({
   sectionTitleBlack: { fontSize: 16, fontWeight: '800', marginBottom: 2 },
   comparisonText: { fontSize: 12, marginBottom: Spacing.three },
 
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },
-  weatherCard: { width: '48%', padding: Spacing.four, borderRadius: Radius.lg, borderWidth: 1 },
-  weatherCardHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: Spacing.three },
-  weatherState: { fontSize: 11, fontWeight: '800', maxWidth: '70%', textAlign: 'right' },
-  weatherUnitName: { fontSize: 15, fontWeight: '800', marginBottom: 4 },
-  weatherDesc: { fontSize: 12, lineHeight: 16 },
+  grid: { gap: Spacing.three },
+  gridRow: { flexDirection: 'row', gap: Spacing.three },
+  weatherCard: { flex: 1, padding: Spacing.three, borderRadius: Radius.lg, borderWidth: 1, minHeight: 110, justifyContent: 'space-between' },
+  weatherCardHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: Spacing.two },
+  weatherState: { fontSize: 11, fontWeight: '800', flexShrink: 1, textAlign: 'right' },
+  weatherUnitName: { fontSize: 14, fontWeight: '800', marginBottom: 2 },
+  weatherDesc: { fontSize: 11, lineHeight: 15 },
 
   trendList: { borderRadius: Radius.lg, borderWidth: 1, overflow: 'hidden' },
   trendRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: Spacing.four, borderBottomWidth: 1 },
@@ -136,9 +176,9 @@ const styles = StyleSheet.create({
   trendValue: { fontSize: 13, fontWeight: '800' },
 
   outcomeCard: { padding: Spacing.four, borderRadius: Radius.lg, borderWidth: 1, marginTop: Spacing.two },
-  outcomeHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.two },
-  outcomeUnit: { fontSize: 14, fontWeight: '700' },
-  badge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
+  outcomeHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 6, marginBottom: Spacing.two },
+  outcomeUnit: { fontSize: 14, fontWeight: '700', flex: 1, minWidth: 150 },
+  badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: Radius.full, alignSelf: 'flex-start' },
   badgeText: { fontSize: 10, fontWeight: '700' },
   outcomeDesc: { fontSize: 13, lineHeight: 18 }
 });

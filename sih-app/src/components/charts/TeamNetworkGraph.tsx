@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Dimensions, ScrollView } from
 import Svg, { Line, Circle, G, Text as SvgText, Rect } from 'react-native-svg';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, Radius } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 
 export interface NetworkNode {
   id: string;
@@ -82,6 +83,7 @@ const STATE_COLORS: Record<string, string> = {
 };
 
 export default function TeamNetworkGraph() {
+  const { colors, isDark } = useTheme();
   const [selectedNode, setSelectedNode] = useState<NetworkNode | null>(DEFAULT_NODES[0]);
   const [selectedClusterFilter, setSelectedClusterFilter] = useState<number | null>(null);
 
@@ -98,68 +100,110 @@ export default function TeamNetworkGraph() {
   const nodeMap = new Map(DEFAULT_NODES.map(n => [n.id, n]));
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.card, borderColor: colors.border }]}>
       <View style={styles.cardHeader}>
         <View style={styles.titleRow}>
-          <Ionicons name="git-network" size={20} color={Colors.light.navy} />
-          <Text style={styles.cardTitle}>TEAM STRESS NETWORK & RESONANCE</Text>
+          <Ionicons name="git-network" size={18} color={colors.primary} />
+          <Text style={[styles.cardTitle, { color: isDark ? '#94A3B8' : colors.textSecondary }]}>
+            TEAM STRESS NETWORK & RESONANCE
+          </Text>
         </View>
-        <View style={styles.resonanceBadge}>
-          <Ionicons name="pulse" size={14} color="#EF4444" />
-          <Text style={styles.resonanceText}>CLUSTER 1 HIGH RESONANCE</Text>
+        <View style={[styles.resonanceBadge, { backgroundColor: isDark ? 'rgba(239, 68, 68, 0.2)' : '#FEE2E2', borderColor: isDark ? 'rgba(239, 68, 68, 0.4)' : '#FECACA' }]}>
+          <Ionicons name="pulse" size={12} color="#EF4444" />
+          <Text style={styles.resonanceText}>CLUSTER 1 RESONANCE</Text>
         </View>
       </View>
 
-      <Text style={styles.subText}>
+      <Text style={[styles.subText, { color: colors.textSecondary }]}>
         Visualizes synchronized welfare changes across connected rosters. Nodes = personnel, Edges = shared shifts, Glowing Edges = synchronized deterioration.
       </Text>
 
       {/* Cluster Filters */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow}>
         <TouchableOpacity
-          style={[styles.filterBtn, selectedClusterFilter === null && styles.filterBtnActive]}
+          style={[
+            styles.filterBtn,
+            { backgroundColor: colors.backgroundElement, borderColor: colors.border },
+            selectedClusterFilter === null && { backgroundColor: colors.primary, borderColor: colors.primary }
+          ]}
           onPress={() => setSelectedClusterFilter(null)}
         >
-          <Text style={[styles.filterBtnText, selectedClusterFilter === null && styles.filterBtnTextActive]}>
+          <Text style={[
+            styles.filterBtnText,
+            { color: colors.textSecondary },
+            selectedClusterFilter === null && { color: '#FFFFFF', fontWeight: 'bold' }
+          ]}>
             All Units (12)
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.filterBtn, selectedClusterFilter === 1 && styles.filterBtnActive]}
+          style={[
+            styles.filterBtn,
+            { backgroundColor: colors.backgroundElement, borderColor: colors.border },
+            selectedClusterFilter === 1 && { backgroundColor: colors.primary, borderColor: colors.primary }
+          ]}
           onPress={() => setSelectedClusterFilter(1)}
         >
-          <Text style={[styles.filterBtnText, selectedClusterFilter === 1 && styles.filterBtnTextActive]}>
+          <Text style={[
+            styles.filterBtnText,
+            { color: colors.textSecondary },
+            selectedClusterFilter === 1 && { color: '#FFFFFF', fontWeight: 'bold' }
+          ]}>
             Training Wing (Resonance)
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.filterBtn, selectedClusterFilter === 2 && styles.filterBtnActive]}
+          style={[
+            styles.filterBtn,
+            { backgroundColor: colors.backgroundElement, borderColor: colors.border },
+            selectedClusterFilter === 2 && { backgroundColor: colors.primary, borderColor: colors.primary }
+          ]}
           onPress={() => setSelectedClusterFilter(2)}
         >
-          <Text style={[styles.filterBtnText, selectedClusterFilter === 2 && styles.filterBtnTextActive]}>
+          <Text style={[
+            styles.filterBtnText,
+            { color: colors.textSecondary },
+            selectedClusterFilter === 2 && { color: '#FFFFFF', fontWeight: 'bold' }
+          ]}>
             Central Ops
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.filterBtn, selectedClusterFilter === 3 && styles.filterBtnActive]}
+          style={[
+            styles.filterBtn,
+            { backgroundColor: colors.backgroundElement, borderColor: colors.border },
+            selectedClusterFilter === 3 && { backgroundColor: colors.primary, borderColor: colors.primary }
+          ]}
           onPress={() => setSelectedClusterFilter(3)}
         >
-          <Text style={[styles.filterBtnText, selectedClusterFilter === 3 && styles.filterBtnTextActive]}>
+          <Text style={[
+            styles.filterBtnText,
+            { color: colors.textSecondary },
+            selectedClusterFilter === 3 && { color: '#FFFFFF', fontWeight: 'bold' }
+          ]}>
             North Zone
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.filterBtn, selectedClusterFilter === 4 && styles.filterBtnActive]}
+          style={[
+            styles.filterBtn,
+            { backgroundColor: colors.backgroundElement, borderColor: colors.border },
+            selectedClusterFilter === 4 && { backgroundColor: colors.primary, borderColor: colors.primary }
+          ]}
           onPress={() => setSelectedClusterFilter(4)}
         >
-          <Text style={[styles.filterBtnText, selectedClusterFilter === 4 && styles.filterBtnTextActive]}>
+          <Text style={[
+            styles.filterBtnText,
+            { color: colors.textSecondary },
+            selectedClusterFilter === 4 && { color: '#FFFFFF', fontWeight: 'bold' }
+          ]}>
             Deployment Unit
           </Text>
         </TouchableOpacity>
       </ScrollView>
 
       {/* Graph Canvas */}
-      <View style={styles.svgContainer}>
+      <View style={[styles.svgContainer, { backgroundColor: isDark ? '#0B1120' : '#F8FAFC', borderColor: colors.border }]}>
         <Svg width="100%" height={320} viewBox="0 0 360 320">
           {/* Cluster boundary highlights */}
           {selectedClusterFilter === null || selectedClusterFilter === 1 ? (
@@ -169,8 +213,8 @@ export default function TeamNetworkGraph() {
               width={125}
               height={140}
               rx={16}
-              fill="rgba(239, 68, 68, 0.08)"
-              stroke="rgba(239, 68, 68, 0.4)"
+              fill={isDark ? 'rgba(239, 68, 68, 0.12)' : 'rgba(239, 68, 68, 0.08)'}
+              stroke={isDark ? 'rgba(239, 68, 68, 0.6)' : 'rgba(239, 68, 68, 0.4)'}
               strokeDasharray="4,4"
               strokeWidth={1.5}
             />
@@ -183,8 +227,8 @@ export default function TeamNetworkGraph() {
               width={110}
               height={130}
               rx={16}
-              fill="rgba(245, 158, 11, 0.06)"
-              stroke="rgba(245, 158, 11, 0.3)"
+              fill={isDark ? 'rgba(245, 158, 11, 0.1)' : 'rgba(245, 158, 11, 0.06)'}
+              stroke={isDark ? 'rgba(245, 158, 11, 0.5)' : 'rgba(245, 158, 11, 0.3)'}
               strokeDasharray="4,4"
               strokeWidth={1}
             />
@@ -197,7 +241,7 @@ export default function TeamNetworkGraph() {
             </SvgText>
           )}
           {(selectedClusterFilter === null || selectedClusterFilter === 2) && (
-            <SvgText x={212} y={56} fontSize={9} fontWeight="bold" fill="#D97706">
+            <SvgText x={212} y={56} fontSize={9} fontWeight="bold" fill="#F59E0B">
               Cluster 2
             </SvgText>
           )}
@@ -210,7 +254,7 @@ export default function TeamNetworkGraph() {
 
             const strokeColor = e.isCoMoving
               ? '#EF4444' // Glowing red for synchronized deterioration
-              : '#94A3B8'; // Subtle slate for normal connection
+              : isDark ? '#334155' : '#94A3B8'; // Subtle slate for normal connection
             const strokeWidth = e.isCoMoving ? 3 : Math.max(1, e.sharedShifts / 5);
             const strokeOpacity = e.isCoMoving ? 0.9 : 0.4;
 
@@ -244,7 +288,7 @@ export default function TeamNetworkGraph() {
                     cy={node.y}
                     r={radius + 6}
                     fill="none"
-                    stroke={Colors.light.navy}
+                    stroke={isDark ? '#38BDF8' : Colors.light.navy}
                     strokeWidth={2.5}
                     strokeDasharray="3,3"
                   />
@@ -255,7 +299,7 @@ export default function TeamNetworkGraph() {
                   cy={node.y}
                   r={radius}
                   fill={color}
-                  stroke="#FFFFFF"
+                  stroke={isDark ? '#0B1120' : '#FFFFFF'}
                   strokeWidth={2}
                 />
                 {/* Initials label */}
@@ -279,33 +323,33 @@ export default function TeamNetworkGraph() {
       <View style={styles.legendRow}>
         <View style={styles.legendItem}>
           <View style={[styles.legendDot, { backgroundColor: STATE_COLORS.stable }]} />
-          <Text style={styles.legendText}>Stable</Text>
+          <Text style={[styles.legendText, { color: colors.textSecondary }]}>Stable</Text>
         </View>
         <View style={styles.legendItem}>
           <View style={[styles.legendDot, { backgroundColor: STATE_COLORS.emerging }]} />
-          <Text style={styles.legendText}>Emerging</Text>
+          <Text style={[styles.legendText, { color: colors.textSecondary }]}>Emerging</Text>
         </View>
         <View style={styles.legendItem}>
           <View style={[styles.legendDot, { backgroundColor: STATE_COLORS.persistent }]} />
-          <Text style={styles.legendText}>Persistent</Text>
+          <Text style={[styles.legendText, { color: colors.textSecondary }]}>Persistent</Text>
         </View>
         <View style={styles.legendItem}>
           <View style={[styles.legendDot, { backgroundColor: STATE_COLORS.sustained }]} />
-          <Text style={styles.legendText}>Sustained</Text>
+          <Text style={[styles.legendText, { color: colors.textSecondary }]}>Sustained</Text>
         </View>
         <View style={styles.legendItem}>
           <View style={[styles.legendLine, { backgroundColor: '#EF4444' }]} />
-          <Text style={styles.legendText}>Co-Moving</Text>
+          <Text style={[styles.legendText, { color: colors.textSecondary }]}>Co-Moving</Text>
         </View>
       </View>
 
       {/* Selected Node Details Card */}
       {selectedNode && (
-        <View style={styles.detailCard}>
+        <View style={[styles.detailCard, { backgroundColor: isDark ? colors.backgroundElement : '#FFFFFF', borderColor: colors.border }]}>
           <View style={styles.detailCardHeader}>
             <View>
-              <Text style={styles.detailName}>{selectedNode.name}</Text>
-              <Text style={styles.detailRole}>
+              <Text style={[styles.detailName, { color: colors.text }]}>{selectedNode.name}</Text>
+              <Text style={[styles.detailRole, { color: colors.textSecondary }]}>
                 {selectedNode.role} · {selectedNode.unit}
               </Text>
             </View>
@@ -326,13 +370,13 @@ export default function TeamNetworkGraph() {
             </View>
           </View>
 
-          <View style={styles.detailMetricsRow}>
+          <View style={[styles.detailMetricsRow, { borderTopColor: colors.borderSubtle }]}>
             <View style={styles.metricCol}>
-              <Text style={styles.metricLabel}>Workload Exposure</Text>
-              <Text style={styles.metricVal}>{selectedNode.workload.toFixed(1)} / 5.0</Text>
+              <Text style={[styles.metricLabel, { color: colors.textSecondary }]}>Workload Exposure</Text>
+              <Text style={[styles.metricVal, { color: colors.text }]}>{selectedNode.workload.toFixed(1)} / 5.0</Text>
             </View>
             <View style={styles.metricCol}>
-              <Text style={styles.metricLabel}>Recovery Debt</Text>
+              <Text style={[styles.metricLabel, { color: colors.textSecondary }]}>Recovery Debt</Text>
               <Text
                 style={[
                   styles.metricVal,
@@ -350,15 +394,15 @@ export default function TeamNetworkGraph() {
               </Text>
             </View>
             <View style={styles.metricCol}>
-              <Text style={styles.metricLabel}>30-Day Trend</Text>
-              <Text style={styles.metricVal}>{selectedNode.recentTrend}</Text>
+              <Text style={[styles.metricLabel, { color: colors.textSecondary }]}>30-Day Trend</Text>
+              <Text style={[styles.metricVal, { color: colors.text }]}>{selectedNode.recentTrend}</Text>
             </View>
           </View>
 
           {selectedNode.clusterId === 1 && (
-            <View style={styles.resonanceAlertBox}>
+            <View style={[styles.resonanceAlertBox, { backgroundColor: isDark ? 'rgba(153, 27, 27, 0.25)' : '#FEF2F2', borderColor: isDark ? 'rgba(239, 68, 68, 0.4)' : '#FECACA' }]}>
               <Ionicons name="warning" size={16} color="#DC2626" />
-              <Text style={styles.resonanceAlertText}>
+              <Text style={[styles.resonanceAlertText, { color: isDark ? '#FCA5A5' : '#991B1B' }]}>
                 <Text style={{ fontWeight: 'bold' }}>Cluster 1 Resonance: </Text>
                 Connected teammates ({DEFAULT_NODES.filter(n => n.clusterId === 1).map(n => n.name).join(', ')}) exhibit synchronized recovery deficit following high-density night shifts.
               </Text>
@@ -372,47 +416,46 @@ export default function TeamNetworkGraph() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: Colors.light.backgroundElement,
     borderRadius: Radius.lg,
     padding: Spacing.four,
     borderWidth: 1,
-    borderColor: Colors.light.borderSubtle,
     marginBottom: Spacing.six,
   },
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 6,
     marginBottom: Spacing.two,
   },
   titleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.two,
+    flex: 1,
+    minWidth: 160,
   },
   cardTitle: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
-    color: Colors.light.textMuted,
-    letterSpacing: 0.8,
+    letterSpacing: 0.5,
   },
   resonanceBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#FEE2E2',
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: Radius.sm,
+    borderRadius: Radius.full,
   },
   resonanceText: {
-    fontSize: 10,
+    fontSize: 9.5,
     fontWeight: 'bold',
     color: '#DC2626',
   },
   subText: {
     fontSize: 12,
-    color: Colors.light.textSecondary,
     marginBottom: Spacing.three,
     lineHeight: 16,
   },
@@ -424,18 +467,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: Radius.sm,
-    backgroundColor: Colors.light.background,
     marginRight: 8,
     borderWidth: 1,
-    borderColor: Colors.light.borderSubtle,
   },
-  filterBtnActive: {
-    backgroundColor: Colors.light.navy,
-    borderColor: Colors.light.navy,
-  },
+  filterBtnActive: {},
   filterBtnText: {
     fontSize: 11,
-    color: Colors.light.textSecondary,
     fontWeight: '500',
   },
   filterBtnTextActive: {
@@ -443,10 +480,8 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   svgContainer: {
-    backgroundColor: '#F8FAFC',
     borderRadius: Radius.md,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -475,14 +510,11 @@ const styles = StyleSheet.create({
   },
   legendText: {
     fontSize: 11,
-    color: Colors.light.textSecondary,
   },
   detailCard: {
-    backgroundColor: '#FFFFFF',
     padding: Spacing.three,
     borderRadius: Radius.md,
     borderWidth: 1,
-    borderColor: Colors.light.borderSubtle,
   },
   detailCardHeader: {
     flexDirection: 'row',
@@ -493,11 +525,9 @@ const styles = StyleSheet.create({
   detailName: {
     fontSize: 15,
     fontWeight: 'bold',
-    color: Colors.light.text,
   },
   detailRole: {
     fontSize: 12,
-    color: Colors.light.textSecondary,
   },
   stateBadge: {
     paddingHorizontal: 8,
@@ -513,35 +543,29 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: Spacing.two,
     borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
   },
   metricCol: {
     flex: 1,
   },
   metricLabel: {
     fontSize: 10,
-    color: Colors.light.textSecondary,
     marginBottom: 2,
   },
   metricVal: {
     fontSize: 13,
     fontWeight: 'bold',
-    color: Colors.light.text,
   },
   resonanceAlertBox: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 8,
-    backgroundColor: '#FEF2F2',
     borderWidth: 1,
-    borderColor: '#FECACA',
     padding: Spacing.two,
     borderRadius: Radius.sm,
     marginTop: Spacing.two,
   },
   resonanceAlertText: {
     fontSize: 11,
-    color: '#991B1B',
     flex: 1,
     lineHeight: 15,
   },
