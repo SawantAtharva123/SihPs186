@@ -199,21 +199,26 @@ def stress_predict(req: MultiModalStressRequest) -> dict:
 
 @router.post("/medical/report-analyze")
 def medical_report_analyze(req: MedicalReportUploadRequest) -> dict:
-    """Analyzes an uploaded doctor report, assessing its clinical impact on stress and welfare."""
-    notes = (req.clinical_notes or "").lower()
-    diag = (req.diagnosis or "").lower()
-    combined_text = f"{notes} {diag}"
-    
-    # Assess severity from text notes if not explicit
-    stress_indicator = req.doctor_stress_indicator
-    if any(w in combined_text for w in ["severe stress", "ptsd", "acute anxiety", "panic", "unfit for duty", "crisis"]):
-        stress_indicator = "Severe"
-    elif any(w in combined_text for w in ["burnout", "exhaustion", "high stress", "insomnia", "chronic fatigue"]):
-        if stress_indicator not in ["Severe"]:
-            stress_indicator = "High"
-    elif any(w in combined_text for w in ["mild fatigue", "strain", "work pressure"]):
-        if stress_indicator not in ["Severe", "High"]:
-            stress_indicator = "Moderate"
+    """Analyzes an uploaded doctor report using the local Qwen-0.5B clinical NLP engine."""
+    from medical_llm.inference import get_clinical_analyzer
+    analyzer = get_clinical_analyzer()
+    analysis = analyzer.analyze(
+        facility=req.facility or "Base Hospital",
+        doctor_name=req.doctor_name or "Attending Medical Officer",
+        consultation_type=req.consultation_type or "Routine",
+        diagnosis=req.diagnosis or "",
+        clinical_notes=req.clinical_notes or ""
+    )
+
+    stress_indicator = analysis["doctor_stress_indicator"]
+    if analysis.get("fit_for_duty") and stress_indicator == "Normal":
+        rest_days = analysis["recommended_rest_days"]
+    elif analysis["recommended_rest_days"] > 0:
+        rest_days = analysis["recommended_rest_days"]
+    else:
+        rest_days = req.recommended_rest_days
+    fit_for_duty = analysis["fit_for_duty"]
+    urgency = analysis["clinical_urgency"]
 
     result = {
         "person_id": req.person_id,
@@ -224,14 +229,15 @@ def medical_report_analyze(req: MedicalReportUploadRequest) -> dict:
         "diagnosis": req.diagnosis,
         "clinical_notes": req.clinical_notes,
         "doctor_stress_indicator": stress_indicator,
-        "recommended_rest_days": req.recommended_rest_days,
-        "fit_for_duty": req.fit_for_duty,
-        "clinical_urgency": "Immediate" if stress_indicator == "Severe" else "Elevated" if stress_indicator == "High" else "Routine",
-        "welfare_impact": "Requires immediate duty relief and welfare monitoring" if stress_indicator == "Severe" else
-                          "Recommend workload easing and rest schedule" if stress_indicator == "High" else
-                          "Routine monitoring"
+        "recommended_rest_days": rest_days,
+        "fit_for_duty": fit_for_duty,
+        "clinical_urgency": urgency,
+        "somatic_symptoms": analysis["somatic_symptoms"],
+        "key_clinical_findings": analysis["key_clinical_findings"],
+        "welfare_impact": analysis["welfare_recommendation"],
+        "model_engine": analysis.get("model_engine", "Qwen-0.5B Local Clinical Model")
     }
-    return envelope(result, confidence=0.90, engine="medical_report")
+    return envelope(result, confidence=analysis.get("confidence", 0.94), engine="qwen_clinical_llm")
 
 
 @router.get("/stress/model-info")
