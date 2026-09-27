@@ -17,6 +17,7 @@ import { insertMedicalRecord } from '@/repositories/medical';
 import { useSahayak } from '@/context/SahayakContext';
 import { useTheme } from '@/context/ThemeContext';
 import { analyzeDoctorReport, DoctorReportAnalysis } from '@/services/analyticsClient';
+import * as DocumentPicker from 'expo-document-picker';
 
 interface DoctorReportModalProps {
   visible: boolean;
@@ -99,8 +100,16 @@ export default function DoctorReportModal({ visible, onClose, onSaved }: DoctorR
   const [fitForDuty, setFitForDuty] = useState(false);
   const [diagnosis, setDiagnosis] = useState('Operational fatigue & severe sleep disruption');
   const [clinicalNotes, setClinicalNotes] = useState('Reports throbbing headaches, elevated heart rate (98 bpm), and severe insomnia. Recommend 3 days rest rotation and temporary relief from perimeter watch.');
-  const [fileName, setFileName] = useState('medical_consultation_report.pdf');
+  const [fileName, setFileName] = useState('official_medical_record.pdf');
   const [saving, setSaving] = useState(false);
+
+  // File Upload State
+  const [uploadedFile, setUploadedFile] = useState<{
+    name: string;
+    size: string;
+    type?: string;
+  } | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   // Local AI Analysis State
   const [analyzingAI, setAnalyzingAI] = useState(false);
@@ -115,6 +124,100 @@ export default function DoctorReportModal({ visible, onClose, onSaved }: DoctorR
     setDiagnosis(preset.diagnosis);
     setClinicalNotes(preset.notes);
     setAiResult(null);
+  };
+
+  /**
+   * Opens the real operating system file picker (on Web, iOS, and Android)
+   * allowing doctors and personnel to upload actual medical reports (PDF, images, text, docx).
+   */
+  const handleUploadDocument = async () => {
+    setUploading(true);
+    try {
+      // 1. Web browser: standard dynamic file input for guaranteed native file chooser modal
+      if (Platform.OS === 'web' && typeof document !== 'undefined') {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.pdf,.txt,.doc,.docx,.png,.jpg,.jpeg,application/pdf';
+        input.style.display = 'none';
+        document.body.appendChild(input);
+
+        input.onchange = async (e: any) => {
+          try {
+            const file = e.target?.files?.[0];
+            if (file) {
+              const sizeStr = `${(file.size / 1024).toFixed(1)} KB`;
+              setUploadedFile({
+                name: file.name,
+                size: sizeStr,
+                type: file.type || 'Document',
+              });
+              setFileName(file.name);
+
+              // If text-readable, extract content directly
+              if (file.type?.includes('text') || file.name.endsWith('.txt')) {
+                const text = await file.text();
+                if (text && text.trim()) {
+                  setClinicalNotes(text);
+                  const firstLine = text.split('\n')[0]?.trim();
+                  if (firstLine && firstLine.length < 90) {
+                    setDiagnosis(firstLine);
+                  }
+                }
+              } else {
+                setDiagnosis((prev) => prev || `Clinical evaluation from attached report: ${file.name}`);
+                setClinicalNotes((prev) =>
+                  prev
+                    ? `${prev}\n\n[Attached Official Medical Record: ${file.name} (${sizeStr})]`
+                    : `Official medical consultation report uploaded: ${file.name} (${sizeStr}). Reviewing clinical observations and duty fitness.`
+                );
+              }
+            }
+          } catch (readErr) {
+            console.warn('Error reading uploaded file:', readErr);
+          } finally {
+            document.body.removeChild(input);
+            setUploading(false);
+          }
+        };
+
+        input.click();
+        return;
+      }
+
+      // 2. Mobile / React Native DocumentPicker
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ['*/*'],
+        copyToCacheDirectory: true,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const asset = result.assets[0];
+        const sizeStr = asset.size ? `${(asset.size / 1024).toFixed(1)} KB` : 'Attached Document';
+        setUploadedFile({
+          name: asset.name,
+          size: sizeStr,
+          type: asset.mimeType || 'Document',
+        });
+        setFileName(asset.name);
+        if (asset.file && asset.mimeType?.includes('text')) {
+          const text = await asset.file.text();
+          if (text) {
+            setClinicalNotes(text);
+          }
+        } else {
+          setDiagnosis((prev) => prev || `Clinical review of uploaded document: ${asset.name}`);
+          setClinicalNotes((prev) =>
+            prev
+              ? `${prev}\n\n[Attached Official Medical Record: ${asset.name}]`
+              : `Official medical consultation report uploaded: ${asset.name}.`
+          );
+        }
+      }
+    } catch (err) {
+      console.warn('Document picker error:', err);
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleAnalyzeWithLocalAI = async () => {
@@ -215,11 +318,69 @@ export default function DoctorReportModal({ visible, onClose, onSaved }: DoctorR
             </Text>
           </View>
 
+          {/* ── INTERACTIVE FILE UPLOADER (PROMINENT DROPZONE) ────────── */}
+          <View style={styles.uploadSection}>
+            <View style={styles.sectionHeaderRow}>
+              <Ionicons name="cloud-upload" size={16} color={colors.primary} />
+              <Text style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>
+                Attach & Upload Clinical Document
+              </Text>
+            </View>
+
+            {uploadedFile ? (
+              <View style={[styles.uploadedFileCard, { backgroundColor: colors.backgroundElement, borderColor: colors.success }]}>
+                <View style={[styles.fileIconWrapper, { backgroundColor: isDark ? '#064E3B' : '#EBF9F1' }]}>
+                  <Ionicons name="checkmark-circle" size={26} color={colors.success} />
+                </View>
+                <View style={{ flex: 1, marginLeft: Spacing.three }}>
+                  <Text style={[styles.uploadedFileName, { color: colors.text }]}>{uploadedFile.name}</Text>
+                  <Text style={[styles.uploadedFileSize, { color: colors.textSecondary }]}>
+                    {uploadedFile.size} · Uploaded & Ready for AI Analysis
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  style={[styles.reuploadBtn, { backgroundColor: isDark ? colors.backgroundTertiary : colors.backgroundSelected }]}
+                  onPress={handleUploadDocument}
+                >
+                  <Ionicons name="cloud-upload-outline" size={16} color={colors.primary} />
+                  <Text style={[styles.reuploadText, { color: colors.primary }]}>Change</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <TouchableOpacity
+                style={[
+                  styles.dropzone,
+                  {
+                    backgroundColor: isDark ? 'rgba(30, 41, 59, 0.5)' : '#F8FAFC',
+                    borderColor: colors.primary,
+                  },
+                ]}
+                onPress={handleUploadDocument}
+                disabled={uploading}
+                activeOpacity={0.8}
+              >
+                <View style={[styles.dropzoneIconBg, { backgroundColor: isDark ? '#1E3A8A' : '#EFF6FF' }]}>
+                  <Ionicons name="cloud-upload" size={28} color={colors.primary} />
+                </View>
+                <Text style={[styles.dropzoneTitle, { color: colors.text }]}>
+                  {uploading ? 'Opening File Chooser...' : 'Upload Medical Report / Consultation File'}
+                </Text>
+                <Text style={[styles.dropzoneSubtitle, { color: colors.textSecondary }]}>
+                  Click to browse PDF, TXT, DOCX, or scanned medical images from your system
+                </Text>
+                <View style={[styles.browseBtn, { backgroundColor: colors.primary }]}>
+                  <Ionicons name="folder-open" size={16} color="#FFFFFF" />
+                  <Text style={styles.browseBtnText}>Browse Files to Upload</Text>
+                </View>
+              </TouchableOpacity>
+            )}
+          </View>
+
           {/* Quick Tactical Presets for Demonstration */}
-          <View style={styles.sectionHeaderRow}>
+          <View style={[styles.sectionHeaderRow, { marginTop: Spacing.four }]}>
             <Ionicons name="flash-outline" size={16} color={colors.accent} />
             <Text style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>
-              Load Tactical Medical Scenarios (Demonstration)
+              Or Load Tactical Medical Scenarios (Demonstration)
             </Text>
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.presetScroll}>
@@ -465,18 +626,25 @@ export default function DoctorReportModal({ visible, onClose, onSaved }: DoctorR
             </TouchableOpacity>
           </View>
 
-          {/* Simulated File Upload Card */}
+          {/* Attached Document Summary Card with Active File Chooser Button */}
           <Text style={[styles.label, { color: colors.text }]}>Attached Report Document</Text>
-          <View style={[styles.attachmentCard, { backgroundColor: colors.backgroundElement, borderColor: colors.border }]}>
+          <TouchableOpacity
+            style={[styles.attachmentCard, { backgroundColor: colors.backgroundElement, borderColor: colors.border }]}
+            onPress={handleUploadDocument}
+            activeOpacity={0.7}
+          >
             <Ionicons name="document-attach" size={24} color={colors.primary} />
             <View style={{ flex: 1, marginLeft: Spacing.three }}>
               <Text style={[styles.attachName, { color: colors.text }]}>{fileName}</Text>
-              <Text style={[styles.attachSize, { color: colors.textSecondary }]}>Verified Official Military Medical Record · 245 KB</Text>
+              <Text style={[styles.attachSize, { color: colors.textSecondary }]}>
+                {uploadedFile ? `${uploadedFile.size} · Uploaded Document` : 'Verified Official Military Medical Record · 245 KB'}
+              </Text>
             </View>
-            <TouchableOpacity onPress={() => setFileName('medical_report_' + Date.now().toString().slice(-4) + '.pdf')}>
-              <Ionicons name="sync" size={20} color={colors.textSecondary} />
-            </TouchableOpacity>
-          </View>
+            <View style={[styles.uploadPill, { backgroundColor: colors.primaryLight }]}>
+              <Ionicons name="cloud-upload" size={14} color={colors.primary} />
+              <Text style={[styles.uploadPillText, { color: colors.primary }]}>Upload</Text>
+            </View>
+          </TouchableOpacity>
         </ScrollView>
 
         {/* Footer */}
@@ -538,6 +706,86 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Colors.light.primaryHover,
     lineHeight: 17,
+  },
+  uploadSection: {
+    marginBottom: Spacing.three,
+  },
+  dropzone: {
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
+    borderRadius: Radius.lg,
+    padding: Spacing.five,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: Spacing.two,
+  },
+  dropzoneIconBg: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: Spacing.two,
+  },
+  dropzoneTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    marginBottom: 4,
+    textAlign: 'center',
+  },
+  dropzoneSubtitle: {
+    fontSize: 12,
+    textAlign: 'center',
+    marginBottom: Spacing.three,
+    maxWidth: 320,
+  },
+  browseBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+    paddingVertical: Spacing.two,
+    paddingHorizontal: Spacing.four,
+    borderRadius: Radius.full,
+  },
+  browseBtnText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  uploadedFileCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: Spacing.four,
+    borderRadius: Radius.lg,
+    borderWidth: 1.5,
+    marginTop: Spacing.two,
+  },
+  fileIconWrapper: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  uploadedFileName: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  uploadedFileSize: {
+    fontSize: 11,
+    marginTop: 2,
+  },
+  reuploadBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: Spacing.one,
+    paddingHorizontal: Spacing.three,
+    borderRadius: Radius.md,
+  },
+  reuploadText: {
+    fontSize: 12,
+    fontWeight: '700',
   },
   sectionHeaderRow: {
     flexDirection: 'row',
@@ -818,6 +1066,18 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: Colors.light.textSecondary,
     marginTop: 2,
+  },
+  uploadPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: Spacing.one,
+    paddingHorizontal: Spacing.three,
+    borderRadius: Radius.full,
+  },
+  uploadPillText: {
+    fontSize: 12,
+    fontWeight: '700',
   },
   footer: {
     flexDirection: 'row',
