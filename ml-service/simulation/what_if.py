@@ -43,15 +43,53 @@ def simulate_person(current: dict, scenario: dict) -> dict:
     recovery_time_hours, duty_hours, rest_hours}. Missing scenario keys
     fall back to current values.
     """
+    cur_sleep = current.get("sleep_hours")
+    if cur_sleep is None and "avg_sleep" in current and current["avg_sleep"] is not None:
+        cur_sleep = current["avg_sleep"]
+    if cur_sleep is None:
+        cur_sleep = 7.0
+
+    cur_workload = current.get("workload")
+    if cur_workload is None and "debt" in current and current["debt"] is not None:
+        cur_workload = 4.2 if float(current["debt"]) > 10 else 3.0
+    if cur_workload is None:
+        cur_workload = 3.0
+
     cur = {
-        "sleep_hours": float(current.get("sleep_hours", 7.0)),
-        "workload": float(current.get("workload", 3.0)),
+        "sleep_hours": float(cur_sleep),
+        "workload": float(cur_workload),
         "night_shifts_per_week": float(current.get("night_shifts_per_week", 2.0)),
         "recovery_time_hours": float(current.get("recovery_time_hours", 2.0)),
         "duty_hours": float(current.get("duty_hours", 8.0)),
         "rest_hours": float(current.get("rest_hours", 10.0)),
     }
-    scn = {k: float(scenario.get(k, v)) for k, v in cur.items()}
+
+    # Detect named intervention in scenario if specific params aren't set
+    intervention = scenario.get("intervention")
+    scn_overrides: dict[str, float] = {}
+    if intervention:
+        interv_str = str(intervention).lower()
+        if "rest" in interv_str or "interval" in interv_str:
+            scn_overrides["rest_hours"] = 12.0
+            scn_overrides["sleep_hours"] = 6.8
+            scn_overrides["recovery_time_hours"] = 3.5
+        elif "night" in interv_str or "shift" in interv_str:
+            scn_overrides["night_shifts_per_week"] = 0.0
+            scn_overrides["sleep_hours"] = 7.2
+            scn_overrides["duty_hours"] = 8.0
+        elif "counsel" in interv_str or "mental" in interv_str:
+            scn_overrides["workload"] = 2.8
+            scn_overrides["recovery_time_hours"] = 3.5
+            scn_overrides["sleep_hours"] = 6.5
+
+    scn = {}
+    for k, v in cur.items():
+        if k in scenario and scenario[k] is not None:
+            scn[k] = float(scenario[k])
+        elif k in scn_overrides:
+            scn[k] = float(scn_overrides[k])
+        else:
+            scn[k] = float(v)
 
     cur_burden = _burden(cur["sleep_hours"], cur["workload"], cur["night_shifts_per_week"],
                          cur["recovery_time_hours"], cur["duty_hours"], cur["rest_hours"])

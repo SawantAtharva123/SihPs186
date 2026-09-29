@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   RefreshControl,
   Modal,
+  Linking,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Spacing, Radius, Shadow } from '@/constants/theme';
@@ -60,6 +61,12 @@ export default function SupportScreen() {
 
   const handleContact = (name: string) => {
     Alert.alert(`Connecting with ${name}`, `Initiating secure unit communication channel...`);
+  };
+
+  const handleDial = (tel: string) => {
+    Linking.openURL(`tel:${tel}`).catch((err) => {
+      console.log('Cannot open dialer:', err);
+    });
   };
 
   const getStatusColor = (status: string) => {
@@ -317,7 +324,7 @@ export default function SupportScreen() {
         </View>
       </FadeInView>
 
-      {/* ── EMERGENCY 24/7 HELPLINES ─────────────────────────────── */}
+      {/* ── EMERGENCY 24/7 HELPLINES (INDIA) ───────────────────────── */}
       <FadeInView delay={300}>
         <View
           style={[
@@ -330,16 +337,50 @@ export default function SupportScreen() {
         >
           <View style={styles.emergencyHeader}>
             <Ionicons name="warning" size={20} color={colors.stateSustained} />
-            <Text style={[styles.emergencyTitle, { color: colors.stateSustained }]}>Emergency 24/7 Crisis Helplines</Text>
+            <Text style={[styles.emergencyTitle, { color: colors.stateSustained }]}>
+              Emergency 24/7 Crisis Helplines (India)
+            </Text>
           </View>
-          <View style={styles.emergencyRow}>
+          <TouchableOpacity
+            style={styles.emergencyRow}
+            activeOpacity={0.7}
+            onPress={() => handleDial('14416')}
+          >
             <Ionicons name="call" size={18} color={colors.stateSustained} />
-            <Text style={[styles.emergencyText, { color: colors.stateSustained }]}>Crisis Line: 1-800-273-8255 (Toll Free)</Text>
-          </View>
-          <View style={styles.emergencyRow}>
+            <Text style={[styles.emergencyText, { color: colors.stateSustained }]}>
+              Tele-MANAS Crisis Line: 14416 / 1800-891-4416 (Toll Free)
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.emergencyRow}
+            activeOpacity={0.7}
+            onPress={() => handleDial('112')}
+          >
+            <Ionicons name="shield-checkmark" size={18} color={colors.stateSustained} />
+            <Text style={[styles.emergencyText, { color: colors.stateSustained }]}>
+              National Emergency Response: 112 (Police / Fire / Medical)
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.emergencyRow}
+            activeOpacity={0.7}
+            onPress={() => handleDial('102')}
+          >
             <Ionicons name="medkit" size={18} color={colors.stateSustained} />
-            <Text style={[styles.emergencyText, { color: colors.stateSustained }]}>Station Medical Emergency: 911 / Extension 101</Text>
-          </View>
+            <Text style={[styles.emergencyText, { color: colors.stateSustained }]}>
+              Station Medical Emergency: 102 / Intercom Ext. 101
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.emergencyRow}
+            activeOpacity={0.7}
+            onPress={() => handleDial('1800-599-0019')}
+          >
+            <Ionicons name="heart" size={18} color={colors.stateSustained} />
+            <Text style={[styles.emergencyText, { color: colors.stateSustained }]}>
+              KIRAN Mental Health Support: 1800-599-0019 (24x7)
+            </Text>
+          </TouchableOpacity>
         </View>
       </FadeInView>
       

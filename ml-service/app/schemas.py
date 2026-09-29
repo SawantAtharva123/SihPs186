@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class SeriesPoint(BaseModel):
@@ -83,12 +83,18 @@ class ExplainRequest(BaseModel):
 
 
 class SimParams(BaseModel):
+    model_config = ConfigDict(extra="allow")
+
     sleep_hours: Optional[float] = None
     workload: Optional[float] = None
     night_shifts_per_week: Optional[float] = None
     recovery_time_hours: Optional[float] = None
     duty_hours: Optional[float] = None
     rest_hours: Optional[float] = None
+    intervention: Optional[str] = None
+    duration_days: Optional[int] = None
+    avg_sleep: Optional[float] = None
+    debt: Optional[float] = None
 
 
 class PersonSimRequest(BaseModel):

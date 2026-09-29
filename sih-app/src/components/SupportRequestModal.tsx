@@ -710,7 +710,7 @@ export default function SupportRequestModal({
                   style={[styles.inputField, { backgroundColor: isDark ? colors.backgroundTertiary : '#F8FAFC', borderColor: colors.border, color: colors.text }]}
                   value={contactPhone}
                   onChangeText={setContactPhone}
-                  placeholder="e.g. Ext. 204 or Mobile Number"
+                  placeholder="e.g. Army Intercom Ext. 204 or +91 98765-43210"
                   placeholderTextColor={colors.textMuted}
                 />
 

@@ -5,6 +5,13 @@ function resolveBaseUrl(): string {
   if (process.env.EXPO_PUBLIC_ML_SERVICE_URL) {
     return process.env.EXPO_PUBLIC_ML_SERVICE_URL;
   }
+  // When running in browser on deployed domains (e.g. Netlify)
+  if (typeof window !== 'undefined' && window.location?.hostname) {
+    const host = window.location.hostname;
+    if (host !== 'localhost' && host !== '127.0.0.1') {
+      return 'https://sahayak-ml-service.onrender.com';
+    }
+  }
   const hostUri = Constants.expoConfig?.hostUri;
   if (hostUri) {
     const ip = hostUri.split(':')[0];
@@ -12,11 +19,11 @@ function resolveBaseUrl(): string {
       return `http://${ip}:8000`;
     }
   }
-  return 'http://localhost:8000';
+  return 'https://sahayak-ml-service.onrender.com';
 }
 
 const BASE_URL = resolveBaseUrl();
-const TIMEOUT_MS = 5000;
+const TIMEOUT_MS = 15000;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -180,19 +187,80 @@ export async function simulatePerson(
 ): Promise<AnalyticsResponse> {
   const cacheKey = `simulate_person:${personId}:${JSON.stringify(scenario)}`;
   try {
-    const result = await postToML('/simulate/person', { current, scenario });
+    const result = await postToML('/simulate/person', { person_id: personId, current, scenario });
     await setCache(cacheKey, personId, null, 'simulation', result);
     return result;
-  } catch {
-    return (
-      (await getCached(cacheKey)) ??
-      offlineFallback({
-        current_burden: 0,
-        scenario_burden: 0,
-        direction: 'Stable',
-        warning: 'Model simulation — not a guaranteed outcome.',
-      })
-    );
+  } catch (err) {
+    console.warn('ML simulatePerson request failed, using intelligent offline simulation:', err);
+    const cached = await getCached(cacheKey);
+    if (cached) return cached;
+
+    // Intelligent local mathematical burden computation matching ML service formula
+    const cur = current as Record<string, any>;
+    const scn = scenario as Record<string, any>;
+    const curSleep = Number(cur.sleep_hours ?? cur.avg_sleep ?? 5.2);
+    const curWorkload = Number(cur.workload ?? (cur.debt && Number(cur.debt) > 10 ? 4.2 : 3.0));
+    const curNightShifts = Number(cur.night_shifts_per_week ?? 3.0);
+    const curRecovery = Number(cur.recovery_time_hours ?? 1.5);
+    const curDuty = Number(cur.duty_hours ?? 10.0);
+    const curRest = Number(cur.rest_hours ?? 6.0);
+
+    let scnSleep = Number(scn.sleep_hours ?? curSleep);
+    let scnWorkload = Number(scn.workload ?? curWorkload);
+    let scnNightShifts = Number(scn.night_shifts_per_week ?? curNightShifts);
+    let scnRecovery = Number(scn.recovery_time_hours ?? curRecovery);
+    let scnDuty = Number(scn.duty_hours ?? curDuty);
+    let scnRest = Number(scn.rest_hours ?? curRest);
+
+    if (scn.intervention) {
+      const interv = String(scn.intervention).toLowerCase();
+      if (interv.includes('rest') || interv.includes('interval')) {
+        scnRest = 12.0;
+        scnSleep = 6.8;
+        scnRecovery = 3.5;
+      } else if (interv.includes('night') || interv.includes('shift')) {
+        scnNightShifts = 0.0;
+        scnSleep = 7.2;
+        scnDuty = 8.0;
+      } else if (interv.includes('counsel') || interv.includes('mental')) {
+        scnWorkload = 2.8;
+        scnRecovery = 3.5;
+        scnSleep = 6.5;
+      }
+    }
+
+    const calcBurden = (sleep: number, wl: number, ns: number, rec: number, duty: number, rest: number) => {
+      let b = 50.0;
+      b -= 9.0 * (sleep - 7.0);
+      b += 8.0 * (wl - 3.0);
+      b += 3.5 * (ns - 2.0);
+      b -= 4.0 * (rec - 2.0);
+      b += 2.0 * (duty - 8.0);
+      b -= 1.5 * (rest - 10.0);
+      return Math.round(Math.max(5.0, Math.min(95.0, b)) * 10) / 10;
+    };
+
+    const curBurden = calcBurden(curSleep, curWorkload, curNightShifts, curRecovery, curDuty, curRest);
+    const scnBurden = calcBurden(scnSleep, scnWorkload, scnNightShifts, scnRecovery, scnDuty, scnRest);
+    const delta = Math.round((scnBurden - curBurden) * 10) / 10;
+    const direction = delta < -3 ? 'improving' : delta > 3 ? 'worsening' : 'stable';
+
+    return offlineFallback({
+      current_burden: curBurden,
+      scenario_burden: scnBurden,
+      delta,
+      direction,
+      scenario_params: {
+        sleep_hours: scnSleep,
+        workload: scnWorkload,
+        night_shifts_per_week: scnNightShifts,
+        recovery_time_hours: scnRecovery,
+        duty_hours: scnDuty,
+        rest_hours: scnRest,
+      },
+      warning: 'Local simulation model — non-diagnostic approximation.',
+      confidence: 0.8,
+    });
   }
 }
 

@@ -22,8 +22,45 @@ export default function InterventionsScreen() {
   const handleSimulate = async () => {
     setSimLoading(true);
     try {
-      const current = { debt: 15, avg_sleep: 5.2 };
-      const scenario = { intervention: selectedScenario, duration_days: 7 };
+      const current = {
+        sleep_hours: 5.2,
+        workload: 4.2,
+        night_shifts_per_week: 3.0,
+        duty_hours: 10.0,
+        rest_hours: 6.0,
+        recovery_time_hours: 1.5,
+        avg_sleep: 5.2,
+        debt: 15,
+      };
+
+      let scenarioParams: Record<string, any> = {};
+      if (selectedScenario === 'Add Rest Interval') {
+        scenarioParams = {
+          rest_hours: 12.0,
+          sleep_hours: 6.8,
+          recovery_time_hours: 3.5,
+        };
+      } else if (selectedScenario === 'Remove Night Shift') {
+        scenarioParams = {
+          night_shifts_per_week: 0.0,
+          sleep_hours: 7.2,
+          duty_hours: 8.0,
+          recovery_time_hours: 3.0,
+        };
+      } else if (selectedScenario === 'Counseling') {
+        scenarioParams = {
+          workload: 2.8,
+          recovery_time_hours: 3.5,
+          sleep_hours: 6.5,
+        };
+      }
+
+      const scenario = {
+        ...scenarioParams,
+        intervention: selectedScenario,
+        duration_days: 7,
+      };
+
       const res = await simulatePerson('person_123', current, scenario);
       setSimResult(res.data);
     } catch (err) {
@@ -33,9 +70,30 @@ export default function InterventionsScreen() {
     }
   };
 
+  const currentBurdenVal = Math.round(simResult?.current_burden ?? 76);
+  const scenarioBurdenVal = Math.round(simResult?.scenario_burden ?? 52);
+
   const chartData = simResult ? [
-    { value: 15, label: 'Current', frontColor: colors.stateSustained },
-    { value: simResult.scenario_burden ?? 8, label: 'Projected', frontColor: colors.stateStable }
+    {
+      value: currentBurdenVal,
+      label: 'Current',
+      frontColor: colors.stateSustained,
+      topLabelComponent: () => (
+        <Text style={{ color: colors.textSecondary, fontSize: 12, fontWeight: '600', marginBottom: 4 }}>
+          {currentBurdenVal}
+        </Text>
+      ),
+    },
+    {
+      value: scenarioBurdenVal,
+      label: 'Projected',
+      frontColor: colors.stateStable,
+      topLabelComponent: () => (
+        <Text style={{ color: colors.stateStable, fontSize: 12, fontWeight: '700', marginBottom: 4 }}>
+          {scenarioBurdenVal}
+        </Text>
+      ),
+    },
   ] : [];
 
   return (
@@ -114,23 +172,58 @@ export default function InterventionsScreen() {
                 <View style={{ marginBottom: 20, marginTop: 10 }}>
                   <BarChart
                     data={chartData}
-                    barWidth={40}
+                    barWidth={48}
                     spacing={60}
                     roundedTop
-                    xAxisThickness={0}
+                    xAxisThickness={1}
+                    xAxisColor={colors.border}
                     yAxisThickness={0}
-                    noOfSections={3}
-                    maxValue={20}
-                    xAxisLabelTextStyle={{ color: colors.textSecondary }}
-                    yAxisTextStyle={{ color: colors.textSecondary }}
+                    noOfSections={4}
+                    maxValue={100}
+                    xAxisLabelTextStyle={{ color: colors.textSecondary, fontSize: 13, fontWeight: '600' }}
+                    yAxisTextStyle={{ color: colors.textSecondary, fontSize: 11 }}
                   />
                 </View>
                 
                 <View style={[styles.mlBox, { backgroundColor: colors.backgroundElement, borderColor: colors.border }]}>
-                  <Text style={[styles.mlResultTitle, { color: isDark ? '#F8FAFC' : colors.navy }]}>Model Projection</Text>
-                  <Text style={[styles.mlResultText, { color: colors.textSecondary }]}>Expected Direction: <Text style={{fontWeight:'bold', color: colors.text}}>{simResult.direction || 'Improving'}</Text></Text>
-                  <Text style={[styles.mlResultText, { color: colors.textSecondary }]}>Current Burden: {simResult.current_burden || 15}</Text>
-                  <Text style={[styles.mlResultText, { color: colors.textSecondary }]}>Projected Burden: {simResult.scenario_burden || 8}</Text>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                    <Text style={[styles.mlResultTitle, { color: isDark ? '#F8FAFC' : colors.navy, marginBottom: 0 }]}>Model Projection</Text>
+                    <View style={{
+                      backgroundColor: simResult.direction === 'improving' ? 'rgba(34, 197, 94, 0.15)' : 'rgba(59, 130, 246, 0.15)',
+                      paddingHorizontal: 10,
+                      paddingVertical: 3,
+                      borderRadius: 12,
+                    }}>
+                      <Text style={{
+                        color: simResult.direction === 'improving' ? '#16a34a' : colors.primary,
+                        fontSize: 12,
+                        fontWeight: '700',
+                        textTransform: 'uppercase',
+                      }}>
+                        {simResult.direction || 'Improving'}
+                      </Text>
+                    </View>
+                  </View>
+                  <Text style={[styles.mlResultText, { color: colors.textSecondary }]}>
+                    Current Burden: <Text style={{ fontWeight: 'bold', color: colors.text }}>{simResult.current_burden} / 100</Text>
+                  </Text>
+                  <Text style={[styles.mlResultText, { color: colors.textSecondary }]}>
+                    Projected Burden: <Text style={{ fontWeight: 'bold', color: colors.stateStable }}>{simResult.scenario_burden} / 100</Text>
+                    {simResult.delta != null && (
+                      <Text style={{ color: simResult.delta < 0 ? '#16a34a' : colors.stateSustained, fontWeight: '700' }}>
+                        {' '}({simResult.delta > 0 ? `+${simResult.delta}` : simResult.delta} pts)
+                      </Text>
+                    )}
+                  </Text>
+                  {simResult.scenario_params && (
+                    <View style={{ marginTop: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: colors.border }}>
+                      <Text style={{ fontSize: 12, color: colors.textSecondary }}>
+                        Target Parameters: {simResult.scenario_params.sleep_hours ? `${simResult.scenario_params.sleep_hours}h sleep` : ''}
+                        {simResult.scenario_params.rest_hours ? ` • ${simResult.scenario_params.rest_hours}h rest` : ''}
+                        {simResult.scenario_params.night_shifts_per_week != null ? ` • ${simResult.scenario_params.night_shifts_per_week} night shifts/wk` : ''}
+                      </Text>
+                    </View>
+                  )}
                   <Text style={[styles.mlResultText, { color: colors.stateEmerging, marginTop: 8, fontSize: 12 }]}>
                     * {simResult.warning || 'This is a model simulation, not a guaranteed outcome.'}
                   </Text>
