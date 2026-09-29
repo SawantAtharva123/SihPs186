@@ -1,0 +1,22 @@
+name: Keep Render ML Service Alive
+
+on:
+  schedule:
+    # Triggers every 12 minutes (Render free tier sleeps after 15 min inactivity)
+    - cron: '*/12 * * * *'
+  workflow_dispatch:
+
+jobs:
+  ping-health:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Health Endpoint
+        run: |
+          TARGET_URL="${{ secrets.RENDER_ML_SERVICE_URL }}"
+          if [ -z "$TARGET_URL" ]; then
+            echo "RENDER_ML_SERVICE_URL secret not set. Skipping ping."
+            echo "Add your Render URL in GitHub repo Settings -> Secrets and variables -> Actions"
+            exit 0
+          fi
+          echo "Pinging: ${TARGET_URL}/health"
+          curl -s -f -m 30 "${TARGET_URL}/health" || echo "Ping completed."

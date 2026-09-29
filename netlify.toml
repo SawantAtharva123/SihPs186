@@ -1,0 +1,11 @@
+# Netlify Configuration for SAHAYAK Frontend
+
+[build]
+  base = "sih-app"
+  publish = "dist"
+  command = "npx expo export --platform web"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

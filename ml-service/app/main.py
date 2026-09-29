@@ -8,6 +8,8 @@ from app.routes import router
 from models.registry import MODEL_NAME, MODEL_VERSION
 
 
+from datetime import datetime, timezone
+
 def create_app() -> FastAPI:
     app = FastAPI(
         title="SAHAYAK ML Service",
@@ -25,9 +27,17 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
+    @app.get("/")
     @app.get("/health")
+    @app.get("/ping")
     def health() -> dict:
-        return {"status": "ok", "model": MODEL_NAME, "version": MODEL_VERSION}
+        return {
+            "status": "ok",
+            "service": "sahayak-ml-service",
+            "model": MODEL_NAME,
+            "version": MODEL_VERSION,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
 
     app.include_router(router, prefix="/api/v1")
     return app
