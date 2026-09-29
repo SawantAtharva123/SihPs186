@@ -16,8 +16,11 @@ SYSTEM_PROMPT = (
     "You are an expert military clinical psychiatrist and senior medical officer in the Indian Armed Forces (SAHAYAK System). "
     "Your objective is to read clinical doctor consultation reports, medical notes, and diagnoses for armed forces personnel, "
     "and extract precise, structured clinical insights to safeguard personnel welfare. "
-    "You must carefully differentiate between true psychological strain, combat hyperarousal, and pure physical injuries, "
-    "and accurately respect negations (e.g., 'denies depression' is Normal, not Severe). "
+    "You must carefully differentiate between true psychological strain, combat hyperarousal, pure physical injuries, and somatic fatigue indicators. "
+    "CRITICAL PROTOCOL: Personnel reporting 'eyes heavy', 'heavy eyes', 'ocular fatigue', or 'lack of sleep' are experiencing acute central nervous system exhaustion and microsleep hazards. "
+    "You MUST classify these cases as High (or Moderate for mild isolated fatigue, Severe for armed crisis) with fit_for_duty set to false and rest days mandated. "
+    "NEVER classify 'eyes heavy and lack of sleep' as Normal or stress OK. "
+    "Accurately respect true negations (e.g., 'denies depression' or 'routine annual check without complaints' is Normal). "
     "Output must be strictly valid JSON matching this schema:\n"
     "{\n"
     '  "doctor_stress_indicator": "Normal" | "Moderate" | "High" | "Severe",\n'
@@ -33,11 +36,12 @@ SYSTEM_PROMPT = (
 # Somatic symptom ontology for defense/tactical medicine
 SOMATIC_KEYWORDS = {
     "tachycardia": ["tachycardia", "palpitations", "elevated heart rate", "rapid pulse", "racing pulse"],
-    "insomnia": ["insomnia", "sleep disruption", "sleep disturbance", "terminal insomnia", "poor sleep", "nightmares"],
+    "insomnia": ["insomnia", "sleep disruption", "sleep disturbance", "terminal insomnia", "poor sleep", "nightmares", "lack of sleep", "no sleep", "loss of sleep", "sleep deficit", "sleep deprivation", "sleeplessness", "broken sleep", "inadequate sleep"],
+    "ocular_fatigue": ["eyes heavy", "heavy eyes", "eyes feeling heavy", "heavy eyelids", "eye strain", "ocular fatigue", "burning eyes", "strained eyes", "tired eyes", "blurry vision", "burning ocular"],
     "hypertension": ["hypertension", "elevated bp", "blood pressure spike", "high blood pressure"],
     "headache": ["headache", "cephalea", "throbbing headache", "retro-orbital pain", "migraine", "tension headache"],
     "hyperarousal": ["hyperarousal", "acoustic startle", "startle reaction", "hyper-vigilance", "panic attack", "on edge"],
-    "fatigue": ["combat fatigue", "exhaustion", "burnout", "hypobaric fatigue", "lethargy", "chronic fatigue"],
+    "fatigue": ["combat fatigue", "exhaustion", "burnout", "hypobaric fatigue", "lethargy", "chronic fatigue", "eyes heavy", "heavy eyes", "lack of sleep", "sleep debt", "extreme exhaustion", "drowsiness"],
     "musculoskeletal": ["lumbar stiffness", "trapezius spasm", "muscle spasm", "cervical strain", "joint stiffness"],
     "dyspepsia": ["gastritis", "acid reflux", "epigastric burning", "functional dyspepsia", "nausea"],
     "hypoxia": ["hypoxia", "low spo2", "spo2 fluctuating", "dyspnea", "breathlessness"],
@@ -162,11 +166,13 @@ class ClinicalReportAnalyzer:
         ]
         high_triggers = [
             "high-altitude hypobaric fatigue", "severe sleep deprivation", "combat fatigue", "burnout",
-            "chronic insomnia", "psychosomatic stress", "tension cephalea", "dyspepsia", "high workload"
+            "chronic insomnia", "psychosomatic stress", "tension cephalea", "dyspepsia", "high workload",
+            "eyes heavy and lack of sleep", "heavy eyes and lack of sleep", "lack of sleep and eyes heavy",
+            "eyes heavy", "heavy eyes", "lack of sleep", "sleep deficit", "eyes feeling heavy"
         ]
         moderate_triggers = [
             "shift work sleep disorder", "circadian fatigue", "mild insomnia", "eye strain",
-            "work pressure", "mild fatigue", "lumbar stiffness"
+            "work pressure", "mild fatigue", "lumbar stiffness", "poor sleep", "tired eyes"
         ]
 
         # Evaluate severity respecting negations
@@ -174,7 +180,33 @@ class ClinicalReportAnalyzer:
         has_high = any(t in text and not any(t in n for n in negated_spans) for t in high_triggers)
         has_moderate = any(t in text and not any(t in n for n in negated_spans) for t in moderate_triggers)
 
-        if is_routine_fit and not (has_severe or has_high):
+        # Cross-symptom synergy: Heavy eyes combined with lack of sleep
+        has_heavy_eyes = any(p in text and not any(p in n for n in negated_spans) for p in [
+            "eyes heavy", "heavy eyes", "eyes feeling heavy", "heavy eyelids", "ocular fatigue", "burning eyes", "strained eyes"
+        ])
+        has_sleep_deficit = any(p in text and not any(p in n for n in negated_spans) for p in [
+            "lack of sleep", "no sleep", "loss of sleep", "insomnia", "sleep deprivation", "sleep disruption", "poor sleep", "sleep deficit"
+        ])
+
+        fit_for_duty_override = None
+        if has_heavy_eyes and has_sleep_deficit and not is_routine_fit:
+            has_high = True
+            if "ocular_fatigue" not in detected_symptoms:
+                detected_symptoms.append("ocular_fatigue")
+            if "insomnia" not in detected_symptoms:
+                detected_symptoms.append("insomnia")
+            rest_days = max(rest_days, 2)
+            fit_for_duty_override = False
+        elif (has_heavy_eyes or has_sleep_deficit) and not is_routine_fit:
+            if not has_high:
+                has_moderate = True
+            if has_heavy_eyes and "ocular_fatigue" not in detected_symptoms:
+                detected_symptoms.append("ocular_fatigue")
+            if has_sleep_deficit and "insomnia" not in detected_symptoms:
+                detected_symptoms.append("insomnia")
+            rest_days = max(rest_days, 1)
+
+        if is_routine_fit and not (has_severe or has_high or (has_heavy_eyes and has_sleep_deficit)):
             stress_indicator = "Normal"
             fit_for_duty = True
             urgency = "Routine"
@@ -184,7 +216,7 @@ class ClinicalReportAnalyzer:
             urgency = "Immediate"
         elif has_high:
             stress_indicator = "High"
-            fit_for_duty = False if unfit_explicit or rest_days >= 3 else True
+            fit_for_duty = False if (unfit_explicit or rest_days >= 2 or fit_for_duty_override is False) else True
             urgency = "Elevated"
         elif has_moderate:
             stress_indicator = "Moderate"
@@ -197,6 +229,8 @@ class ClinicalReportAnalyzer:
 
         # 6. Synthesize clinical findings and welfare recommendations
         findings = []
+        if has_heavy_eyes and has_sleep_deficit:
+            findings.append("Identified acute ocular fatigue and severe sleep deficit (critical microsleep hazard on duty)")
         if detected_symptoms:
             findings.append(f"Identified somatic stress signs: {', '.join(detected_symptoms[:4])}")
         if rest_days > 0:
@@ -212,7 +246,7 @@ class ClinicalReportAnalyzer:
         if stress_indicator == "Severe":
             recommendation = "Immediate duty relief, weapon safekeeping protocol, and urgent psychiatric referral."
         elif stress_indicator == "High":
-            recommendation = f"Implement {rest_days or 3}-day operational rest rotation and light duty adjustment."
+            recommendation = f"Mandatory {rest_days or 3}-day restorative sleep recovery and stand-down from armed sentry patrol."
         elif stress_indicator == "Moderate":
             recommendation = "Circadian realignment rest and routine welfare monitoring."
         else:

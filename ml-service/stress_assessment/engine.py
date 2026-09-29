@@ -82,15 +82,32 @@ def parse_somatic_symptoms(note: Optional[str]) -> Tuple[List[str], float, List[
             "detail": "Reported cephalic or vestibular symptoms indicating acute physiological strain."
         })
 
-    # 4. Severe distress / Insomnia
-    if any(w in text for w in ["can't sleep", "cannot sleep", "nightmare", "panic", "anxious", "overwhelmed", "shivering", "insomnia"]):
-        detected_symptoms.append("Acute Sleeplessness / Distress")
+    # 4. Severe distress / Insomnia / Lack of sleep
+    has_sleep_issue = any(w in text for w in [
+        "can't sleep", "cannot sleep", "nightmare", "panic", "anxious", "overwhelmed",
+        "shivering", "insomnia", "lack of sleep", "no sleep", "loss of sleep",
+        "poor sleep", "sleep deficit", "sleepless", "broken sleep", "inadequate sleep"
+    ])
+    if has_sleep_issue:
+        detected_symptoms.append("Acute Sleeplessness / Lack of Sleep")
         somatic_boost += 22.0
         findings.append({
             "modality": "Self-Assessment (Somatic Notes)",
-            "factor": "Somatic Distress",
+            "factor": "Somatic Sleep Deficit",
             "impact": "High Negative",
-            "detail": "Reported subjective sleep obstruction or acute autonomic tension."
+            "detail": "Reported subjective lack of sleep or acute operational sleep restriction."
+        })
+
+    # Compound Heavy Eyes + Lack of Sleep synergy
+    has_heavy_eyes_sym = "Ocular Fatigue (Heavy Eyes)" in detected_symptoms
+    has_sleep_sym = "Acute Sleeplessness / Lack of Sleep" in detected_symptoms
+    if has_heavy_eyes_sym and has_sleep_sym:
+        somatic_boost += 18.0
+        findings.append({
+            "modality": "Self-Assessment (Somatic Notes)",
+            "factor": "Ocular-Central Exhaustion Synergy",
+            "impact": "High Negative",
+            "detail": "Dual presentation of heavy eyes and lack of sleep indicates acute central nervous system exhaustion and high operational microsleep hazard."
         })
 
     return detected_symptoms, somatic_boost, findings
@@ -272,7 +289,10 @@ def assess_stress(
         safety_triggers.append("Self-assessment indicated high stress.")
 
     # Guardrail 5: Somatic Symptoms from Notes (NLP Extraction)
-    if "Ocular Fatigue (Heavy Eyes)" in somatic_symptoms or "Neurological Strain (Headache/Dizziness)" in somatic_symptoms:
+    if "Ocular Fatigue (Heavy Eyes)" in somatic_symptoms and "Acute Sleeplessness / Lack of Sleep" in somatic_symptoms:
+        final_class_idx = max(final_class_idx, 3 if sleep_hours <= 4.5 else 2)
+        safety_triggers.append("Severe cognitive-ocular fatigue flagged (Heavy eyes + Lack of sleep) — mandatory safety floor.")
+    elif "Ocular Fatigue (Heavy Eyes)" in somatic_symptoms or "Neurological Strain (Headache/Dizziness)" in somatic_symptoms:
         if sleep_hours <= 5.5 or rapid_rt >= 460.0:
             final_class_idx = max(final_class_idx, 3 if (sleep_hours <= 4.0 or rapid_rt >= 600.0) else 2)
             safety_triggers.append(f"Critical somatic fatigue flagged: {', '.join(somatic_symptoms)}.")

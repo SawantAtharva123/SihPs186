@@ -191,6 +191,93 @@ SCENARIOS = [
             ],
             "welfare_recommendation": "2 days physical rest from drill/PT, crepe support, maintain normal morale."
         }
+    },
+    # 7. Acute Sleep Deprivation & Ocular Fatigue (High) - Eyes Heavy & Lack of Sleep
+    {
+        "facility": "Forward Operating Base MI Room, Kupwara Sector",
+        "doctor_name": "Capt. Dr. Siddharth Rawat, AMC",
+        "consultation_type": "Operational Sentry Fitness Evaluation",
+        "diagnosis": "Acute Circadian Exhaustion & Ocular Asthenopia (Severe Sleep Deficit)",
+        "clinical_notes": (
+            "26-year-old Rifleman on rotational counter-infiltration vigilance duty. "
+            "Soldier explicitly reports: 'My eyes feel extremely heavy and I have a complete lack of sleep over the past 72 hours due to relentless night ambushes.' "
+            "Clinical inspection reveals marked conjunctival injection (bloodshot eyes), heavy drooping eyelids, and slow pupillary response. "
+            "Reaction time testing reveals delayed psychomotor responses (RT 580ms). "
+            "Soldier expresses acute fear of drifting into microsleep while manning machine gun post. "
+            "Zero suicidal intent, but severe autonomic and cognitive fatigue present. "
+            "Assessment: Acute operational exhaustion from severe sleep deficit with high risk of microsleep collapse. "
+            "Mandatory stand-down: Relieve from all weapon posts immediately. Prescribe 72-hour restorative sleep protocol in quiet quarters."
+        ),
+        "target": {
+            "doctor_stress_indicator": "High",
+            "clinical_urgency": "Elevated",
+            "fit_for_duty": False,
+            "recommended_rest_days": 3,
+            "somatic_symptoms": ["eyes heavy", "ocular fatigue", "lack of sleep", "insomnia", "delayed reaction time", "acute exhaustion"],
+            "key_clinical_findings": [
+                "Severe sleep deficit following consecutive night ambush operations",
+                "Pronounced ocular fatigue with heavy eyelids and bloodshot sclera",
+                "Critical microsleep vulnerability compromising armed sentry safety",
+                "Substantial psychomotor reaction delay (580ms)"
+            ],
+            "welfare_recommendation": "Mandatory 3-day restorative sleep rotation, relief from weapon handling, and sleep debt recovery."
+        }
+    },
+    # 8. Night Patrol Shift Exhaustion (High) - Eyes Heavy, Poor Sleep
+    {
+        "facility": "Sector Hospital, 33 Bn Indo-Tibetan Border Police (ITBP)",
+        "doctor_name": "Dr. Vikas Negi, CMO (OG)",
+        "consultation_type": "Shift Fatigue & High-Altitude Vigil",
+        "diagnosis": "Operational Sleep Debt Syndrome with Severe Ocular Strain",
+        "clinical_notes": (
+            "Constable reports with persistent complaints that eyes are heavy, burning, and vision blurs when scanning ridgelines. "
+            "States severe lack of sleep from back-to-back 12-hour sub-zero night shifts. "
+            "Soldier reports sleeping only 2 to 3 broken hours in barracks. "
+            "Mental state: Lethargic, heavy eyes, difficulty sustaining attentional vigilance. Denies chest pain or major illness. "
+            "Assessment: High physiological and mental strain driven by chronic sleep deficit and ocular fatigue. "
+            "Temporary relief from border night sentry duty required for 48 to 72 hours."
+        ),
+        "target": {
+            "doctor_stress_indicator": "High",
+            "clinical_urgency": "Elevated",
+            "fit_for_duty": False,
+            "recommended_rest_days": 3,
+            "somatic_symptoms": ["eyes heavy", "ocular strain", "burning eyes", "lack of sleep", "sleep deprivation", "lethargy"],
+            "key_clinical_findings": [
+                "Profound sleep deficit (2-3 hours broken sleep) with heavy ocular exhaustion",
+                "Attentional degradation under sub-zero border patrol conditions",
+                "Elevated stress response secondary to circadian rhythm disruption"
+            ],
+            "welfare_recommendation": "Excused night sentry duty for 3 days; implement circadian realignment and warm recovery quarters."
+        }
+    },
+    # 9. Personnel Check-In Note Triangulation (High) - Eyes Heavy & Insomnia
+    {
+        "facility": "Battalion Health Center, 108 CRPF Bn, Bastar",
+        "doctor_name": "Dr. Meenakshi Sunder, GDMO",
+        "consultation_type": "Clinical Wellness Check",
+        "diagnosis": "Somatic Combat Fatigue & Acute Sleep Restriction",
+        "clinical_notes": (
+            "Personnel self-reported check-in flagged: 'eyes heavy and lack of sleep, cannot concentrate on routine duties.' "
+            "During clinical consultation, Constable confirms severe sleep deprivation over 4 consecutive road clearing duties. "
+            "Reports heavy eyelids, forehead tightness, and difficulty staying awake during static sentry. "
+            "Pulse 88 bpm, BP 132/86 mmHg. Affect is fatigued and anxious regarding performance. "
+            "Assessment: High stress response with somatic manifestation of extreme sleep exhaustion. "
+            "Advise 2 days complete rest in unit MI Room."
+        ),
+        "target": {
+            "doctor_stress_indicator": "High",
+            "clinical_urgency": "Elevated",
+            "fit_for_duty": False,
+            "recommended_rest_days": 2,
+            "somatic_symptoms": ["eyes heavy", "lack of sleep", "heavy eyelids", "somnolence", "tension"],
+            "key_clinical_findings": [
+                "Corroborated check-in finding of heavy eyes and severe lack of sleep",
+                "Cognitive lapses and daytime sleepiness during static sentry duty",
+                "Somatic exhaustion secondary to intensive operational operational tempo"
+            ],
+            "welfare_recommendation": "2 days medical quarters rest, hydration, and scheduled supervisory check-in."
+        }
     }
 ]
 
@@ -198,8 +285,11 @@ SYSTEM_PROMPT = (
     "You are an expert military clinical psychiatrist and senior medical officer in the Indian Armed Forces (SAHAYAK System). "
     "Your objective is to read clinical doctor consultation reports, medical notes, and diagnoses for armed forces personnel, "
     "and extract precise, structured clinical insights to safeguard personnel welfare. "
-    "You must carefully differentiate between true psychological strain, combat hyperarousal, and pure physical injuries, "
-    "and accurately respect negations (e.g., 'denies depression' is Normal, not Severe). "
+    "You must carefully differentiate between true psychological strain, combat hyperarousal, pure physical injuries, and somatic fatigue indicators. "
+    "CRITICAL PROTOCOL: Personnel reporting 'eyes heavy', 'heavy eyes', 'ocular fatigue', or 'lack of sleep' are experiencing acute central nervous system exhaustion and microsleep hazards. "
+    "You MUST classify these cases as High (or Moderate for mild isolated fatigue, Severe for armed crisis) with fit_for_duty set to false and rest days mandated. "
+    "NEVER classify 'eyes heavy and lack of sleep' as Normal or stress OK. "
+    "Accurately respect true negations (e.g., 'denies depression' or 'routine annual check without complaints' is Normal). "
     "Output must be strictly valid JSON matching this schema:\n"
     "{\n"
     '  "doctor_stress_indicator": "Normal" | "Moderate" | "High" | "Severe",\n'

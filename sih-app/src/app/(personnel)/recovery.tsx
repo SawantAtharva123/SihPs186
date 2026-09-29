@@ -109,17 +109,57 @@ export default function RecoveryScreen() {
           {loading ? (
             <ActivityIndicator size="small" color={colors.primary} />
           ) : recommendations?.recommendations?.length > 0 ? (
-            recommendations.recommendations.map((rec: any, idx: number) => (
-              <BouncyPressable key={idx} style={[styles.recItem, { backgroundColor: isDark ? colors.backgroundTertiary : '#F8FAFC', borderColor: colors.border }]}>
-                <View style={[styles.recIconCircle, { backgroundColor: isDark ? 'rgba(74, 144, 226, 0.15)' : colors.primaryLight }]}>
-                  <Ionicons name="bulb-outline" size={20} color={colors.primary} />
-                </View>
-                <View style={styles.recContent}>
-                  <Text style={[styles.recTitle, { color: colors.text }]}>{rec.title || 'Suggestion'}</Text>
-                  <Text style={[styles.recDesc, { color: colors.textSecondary }]}>{rec.description || rec}</Text>
-                </View>
-              </BouncyPressable>
-            ))
+            recommendations.recommendations.map((rec: any, idx: number) => {
+              const title =
+                rec.title ||
+                rec.potential ||
+                (typeof rec === 'string' ? rec : 'Suggestion');
+              const desc =
+                rec.description ||
+                rec.why ||
+                (rec.observed
+                  ? `${rec.observed} ${rec.why || ''}`.trim()
+                  : typeof rec === 'string'
+                  ? ''
+                  : '');
+
+              return (
+                <BouncyPressable
+                  key={idx}
+                  style={[
+                    styles.recItem,
+                    {
+                      backgroundColor: isDark ? colors.backgroundTertiary : '#F8FAFC',
+                      borderColor: colors.border,
+                    },
+                  ]}
+                >
+                  <View
+                    style={[
+                      styles.recIconCircle,
+                      {
+                        backgroundColor: isDark
+                          ? 'rgba(74, 144, 226, 0.15)'
+                          : colors.primaryLight,
+                      },
+                    ]}
+                  >
+                    <Ionicons name="bulb-outline" size={20} color={colors.primary} />
+                  </View>
+                  <View style={styles.recContent}>
+                    <Text style={[styles.recTitle, { color: colors.text }]}>{title}</Text>
+                    {desc ? (
+                      <Text style={[styles.recDesc, { color: colors.textSecondary }]}>{desc}</Text>
+                    ) : null}
+                    {rec.evidence && (
+                      <Text style={{ fontSize: 11, color: colors.textMuted, marginTop: 4 }}>
+                        Basis: {rec.evidence} {rec.confidence ? `· Confidence: ${rec.confidence}` : ''}
+                      </Text>
+                    )}
+                  </View>
+                </BouncyPressable>
+              );
+            })
           ) : (
             <BouncyPressable style={[styles.recItem, { backgroundColor: isDark ? colors.backgroundTertiary : '#F8FAFC', borderColor: colors.border }]}>
               <View style={[styles.recIconCircle, { backgroundColor: isDark ? 'rgba(74, 144, 226, 0.15)' : colors.primaryLight }]}>

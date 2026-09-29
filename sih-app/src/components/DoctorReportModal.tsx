@@ -75,6 +75,17 @@ const TACTICAL_CASE_PRESETS = [
     notes: 'Head Constable on rotating night vigil along western boundary. Reports eye strain, lumbar stiffness, and daytime lethargy. Denies depression, denies suicidal thoughts. Vitals stable. Recommend 24-hour sleep realignment rest. Fit for standard camp duties.',
   },
   {
+    id: 'heavy_eyes',
+    label: 'Eyes Heavy & Sleep Deficit',
+    tag: 'Night Sentry Vigil',
+    color: '#8B5CF6',
+    doctor: 'Capt. Dr. Siddharth Rawat, AMC',
+    facility: 'Forward Operating Base MI Room, Kupwara Sector',
+    type: 'Operational Stress & Fatigue',
+    diagnosis: 'Acute Sentry Exhaustion & Ocular Strain (Severe Sleep Deficit)',
+    notes: 'Rifleman on border night vigil explicitly reports eyes heavy and lack of sleep over 72 hours. Bloodshot eyes, slowed blink rate, psychomotor delay noted. Risk of attentional microsleep on sentry duty. Unfit for arms duty. 3 days medical rest required.',
+  },
+  {
     id: 'fit',
     label: 'SHAPE-1 Category AYE',
     tag: 'Fully Fit',

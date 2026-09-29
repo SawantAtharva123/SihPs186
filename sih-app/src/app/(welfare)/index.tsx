@@ -1,19 +1,21 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Spacing, Radius } from '@/constants/theme';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { PieChart } from 'react-native-gifted-charts';
 import { analyzeSignalAgreement } from '@/services/analyticsClient';
 import { useTheme } from '@/context/ThemeContext';
 import { FadeInView } from '@/components/animations/FadeInView';
 import { BouncyPressable } from '@/components/animations/BouncyPressable';
+import { getAllSupportRequestsForQueue } from '@/repositories/support';
 
 export default function WelfareDashboardScreen() {
   const router = useRouter();
   const { colors, isDark } = useTheme();
   const [loading, setLoading] = useState(true);
   const [signalData, setSignalData] = useState<any>(null);
+  const [queueStats, setQueueStats] = useState({ total: 0, urgent: 0 });
 
   const statuses = [
     { label: 'Stable', count: 48, color: colors.stateStable },
@@ -27,6 +29,22 @@ export default function WelfareDashboardScreen() {
     color: s.color,
     text: s.count.toString(),
   }));
+
+  const fetchQueueData = useCallback(async () => {
+    try {
+      const items = await getAllSupportRequestsForQueue();
+      const urgent = items.filter((i) => i.priority === 'urgent' && i.status !== 'Resolved').length;
+      setQueueStats({ total: items.length, urgent });
+    } catch (e) {
+      console.warn('Queue stats fetch failed:', e);
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchQueueData();
+    }, [fetchQueueData])
+  );
 
   useEffect(() => {
     const fetchMLData = async () => {
@@ -52,11 +70,45 @@ export default function WelfareDashboardScreen() {
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={styles.content}>
       <FadeInView delay={50}>
         <Text style={[styles.headerTitle, { color: colors.text }]}>Welfare Dashboard</Text>
-        <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>Unit 402 · AI Health Overview</Text>
+        <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>Unit 402 · Capt. Meera Nair (Command Center)</Text>
+      </FadeInView>
+
+      {/* ── LIVE SUPPORT & FACILITY HAZARD QUEUE ALERT ───────────── */}
+      <FadeInView delay={80}>
+        <BouncyPressable
+          style={[
+            styles.queueBanner,
+            {
+              backgroundColor: isDark ? 'rgba(220, 38, 38, 0.15)' : '#FEF2F2',
+              borderColor: isDark ? '#991B1B' : '#FECACA',
+            },
+          ]}
+          onPress={() => router.push('/(welfare)/cases')}
+        >
+          <View style={styles.queueBannerIcon}>
+            <Ionicons name="construct" size={24} color="#DC2626" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Text style={[styles.queueBannerTitle, { color: isDark ? '#FCA5A5' : '#991B1B' }]}>
+                Support & Facility Hazard Queue
+              </Text>
+              {queueStats.urgent > 0 && (
+                <View style={styles.urgentPill}>
+                  <Text style={styles.urgentPillText}>{queueStats.urgent} URGENT</Text>
+                </View>
+              )}
+            </View>
+            <Text style={[styles.queueBannerSub, { color: isDark ? '#FECDD3' : '#B91C1C' }]}>
+              {queueStats.total} active ticket(s) · Callbacks, private meetings & whistleblower reports
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={isDark ? '#FCA5A5' : '#991B1B'} />
+        </BouncyPressable>
       </FadeInView>
 
       {/* Status Distribution Pie Chart */}
-      <FadeInView delay={100}>
+      <FadeInView delay={110}>
         <View style={[styles.chartCard, { backgroundColor: colors.backgroundElement, borderColor: colors.border }]}>
           <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>STATUS DISTRIBUTION</Text>
           <View style={styles.pieContainer}>
@@ -166,4 +218,42 @@ const styles = StyleSheet.create({
   mlBox: { padding: 12, borderRadius: 8, marginTop: 10, borderWidth: 1 },
   mlResultTitle: { fontWeight: '700', marginBottom: 4, fontSize: 14 },
   mlResultText: { marginBottom: 2, fontSize: 13 },
+
+  queueBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: Spacing.four,
+    borderRadius: Radius.xl,
+    borderWidth: 1.5,
+    marginBottom: Spacing.five,
+    gap: Spacing.three,
+  },
+  queueBannerIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(220, 38, 38, 0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  queueBannerTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  urgentPill: {
+    backgroundColor: '#EF4444',
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 6,
+  },
+  urgentPillText: {
+    color: '#ffffff',
+    fontSize: 9,
+    fontWeight: '900',
+  },
+  queueBannerSub: {
+    fontSize: 12,
+    marginTop: 2,
+  },
 });
+

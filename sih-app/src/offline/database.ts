@@ -34,6 +34,25 @@ export async function getDatabase(): Promise<SQLite.SQLiteDatabase> {
           server_timestamp         TEXT
         );
         CREATE INDEX IF NOT EXISTS idx_medical_records_person ON medical_records (person_id, date);
+
+        CREATE TABLE IF NOT EXISTS support_requests (
+          id                TEXT PRIMARY KEY,
+          client_id         TEXT UNIQUE,
+          person_id         TEXT,
+          category          TEXT,
+          request_type      TEXT,
+          is_anonymous      INTEGER DEFAULT 0,
+          notes             TEXT,
+          status            TEXT DEFAULT 'Submitted',
+          created_at        TEXT,
+          updated_at        TEXT,
+          sync_status       TEXT DEFAULT 'pending',
+          sync_attempts     INTEGER DEFAULT 0,
+          last_sync_error   TEXT,
+          device_timestamp  TEXT,
+          server_timestamp  TEXT
+        );
+        CREATE INDEX IF NOT EXISTS idx_support_requests_person ON support_requests (person_id, created_at);
       `);
       return db;
     })();

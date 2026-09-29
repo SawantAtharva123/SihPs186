@@ -196,6 +196,42 @@ export default function WelfarePersonnelScreen() {
     }
   };
 
+  const getPersonnelStressStatus = (p: DemoPersonnel): {
+    statusLevel: 'Critical' | 'High' | 'Medium' | 'Stable';
+    hasSignalDivergence: boolean;
+  } => {
+    const docInd = p.doctorReports.doctor_stress_indicator;
+    const selfInd = p.selfAssessment.self_reported_stress;
+    const isDivergent =
+      (docInd === 'High' && (selfInd === 'Low' || selfInd === 'Normal')) ||
+      (docInd === 'Normal' && selfInd === 'High');
+
+    if (
+      p.doctorReports.sick_leave_days >= 5 ||
+      docInd === 'Severe' ||
+      (p.selfAssessment.sleep_hours <= 4.5 && p.doctorReports.sick_leave_days >= 3)
+    ) {
+      return { statusLevel: 'Critical', hasSignalDivergence: isDivergent };
+    }
+    if (
+      p.doctorReports.sick_leave_days >= 3 ||
+      docInd === 'High' ||
+      p.selfAssessment.sleep_hours < 5.5 ||
+      selfInd === 'High'
+    ) {
+      return { statusLevel: 'High', hasSignalDivergence: isDivergent };
+    }
+    if (
+      p.doctorReports.sick_leave_days >= 1 ||
+      docInd === 'Moderate' ||
+      selfInd === 'Medium' ||
+      p.selfAssessment.sleep_hours < 6.5
+    ) {
+      return { statusLevel: 'Medium', hasSignalDivergence: isDivergent };
+    }
+    return { statusLevel: 'Stable', hasSignalDivergence: isDivergent };
+  };
+
   const getLevelColor = (level?: string) => {
     switch (level) {
       case 'Critical': return { color: colors.stateSustained, bg: isDark ? '#4C0519' : '#FFF1F2' };
@@ -208,8 +244,27 @@ export default function WelfarePersonnelScreen() {
   const filtered = PERSONNEL_DATA.filter((p) => {
     const matchesSearch =
       p.name.toLowerCase().includes(search.toLowerCase()) ||
-      p.id.toLowerCase().includes(search.toLowerCase());
-    return matchesSearch;
+      p.id.toLowerCase().includes(search.toLowerCase()) ||
+      p.rank.toLowerCase().includes(search.toLowerCase()) ||
+      p.unit.toLowerCase().includes(search.toLowerCase());
+    if (!matchesSearch) return false;
+
+    const { statusLevel, hasSignalDivergence } = getPersonnelStressStatus(p);
+
+    if (filter === 'All') return true;
+    if (filter === 'Critical Priority' || filter === 'Critical') return statusLevel === 'Critical';
+    if (filter === 'High Stress' || filter === 'Elevated Stress' || filter === 'High') {
+      return statusLevel === 'High' || statusLevel === 'Critical';
+    }
+    if (filter === 'Medium / Moderate' || filter === 'Medium' || filter === 'Moderate') {
+      return statusLevel === 'Medium';
+    }
+    if (filter === 'Stable / Low' || filter === 'Stable' || filter === 'Low') {
+      return statusLevel === 'Stable';
+    }
+    if (filter === 'Signal Divergence') return hasSignalDivergence;
+
+    return true;
   });
 
   return (
@@ -232,7 +287,7 @@ export default function WelfarePersonnelScreen() {
         </View>
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filtersRow}>
-          {['All', 'Critical Priority', 'Elevated Stress', 'Signal Divergence'].map((f) => (
+          {['All', 'Critical Priority', 'High Stress', 'Medium / Moderate', 'Stable / Low', 'Signal Divergence'].map((f) => (
             <TouchableOpacity
               key={f}
               style={[
@@ -254,8 +309,7 @@ export default function WelfarePersonnelScreen() {
 
       <ScrollView style={styles.list}>
         {filtered.map((p) => {
-          const isHigh = p.doctorReports.sick_leave_days >= 3 || p.selfAssessment.sleep_hours < 5.5;
-          const statusLevel = isHigh ? (p.doctorReports.sick_leave_days >= 5 ? 'Critical' : 'High') : 'Stable';
+          const { statusLevel, hasSignalDivergence } = getPersonnelStressStatus(p);
           const theme = getLevelColor(statusLevel);
 
           return (
@@ -271,8 +325,15 @@ export default function WelfarePersonnelScreen() {
                     {p.rank} · {p.id} · {p.unit}
                   </Text>
                 </View>
-                <View style={[styles.badge, { backgroundColor: theme.bg }]}>
-                  <Text style={[styles.badgeText, { color: theme.color }]}>{statusLevel}</Text>
+                <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
+                  {hasSignalDivergence && (
+                    <View style={[styles.badge, { backgroundColor: isDark ? '#312E81' : '#EEF2FF' }]}>
+                      <Text style={[styles.badgeText, { color: '#6366F1' }]}>Divergence</Text>
+                    </View>
+                  )}
+                  <View style={[styles.badge, { backgroundColor: theme.bg }]}>
+                    <Text style={[styles.badgeText, { color: theme.color }]}>{statusLevel}</Text>
+                  </View>
                 </View>
               </View>
 

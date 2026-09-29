@@ -192,3 +192,66 @@ export interface UnitOverviewItem {
   dutyVariabilityPercent: number;
   consecutiveDutyPercent: number;
 }
+
+export type SupportOptionType =
+  | 'officer_callback'
+  | 'private_meeting'
+  | 'buddy_contact'
+  | 'workload_issue'
+  | 'facility_issue'
+  | 'schedule_problem'
+  | 'general_support';
+
+export type FacilityCategory =
+  | 'accommodation'
+  | 'food'
+  | 'water'
+  | 'electricity'
+  | 'transport'
+  | 'equipment'
+  | 'sanitation'
+  | 'other';
+
+export type SupportPriority = 'normal' | 'medium' | 'high' | 'urgent';
+
+export interface SupportPhotoAttachment {
+  uri: string;
+  name: string;
+  size?: string;
+  previewUrl?: string;
+}
+
+export interface SupportRequestRecord {
+  id: string; // e.g. REQ-FAC-7419
+  clientId?: string;
+  personId: string;
+  personName?: string;
+  unit: string;
+  requestType: SupportOptionType;
+  categoryTitle: string;
+  isAnonymous: boolean;
+  priority: SupportPriority;
+  facilityCategory?: FacilityCategory;
+  location?: string;
+  notes: string;
+  preferredTimeWindow?: string;
+  contactPreference?: string;
+  preferredMeetingLocation?: string;
+  preferredMeetingDate?: string;
+  buddyName?: string;
+  workloadDetails?: {
+    consecutiveDays?: number;
+    issueType?: string;
+  };
+  scheduleDetails?: {
+    rosterDate?: string;
+    shiftImpact?: string;
+  };
+  photos: SupportPhotoAttachment[];
+  status: 'Submitted' | 'Acknowledged' | 'Under Review' | 'Dispatched' | 'In Progress' | 'Resolved' | 'Closed';
+  assignedOfficer?: string;
+  officerNotes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+

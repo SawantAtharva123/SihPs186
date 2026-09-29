@@ -340,6 +340,9 @@ export async function predictStressAssessment(payload: {
     if (note.includes('heavy') || note.includes('eye') || note.includes('vision') || note.includes('blur')) {
       somatic.push('Ocular Fatigue (Heavy Eyes)');
     }
+    if (note.includes('lack of sleep') || note.includes('no sleep') || note.includes('cannot sleep') || note.includes("can't sleep") || note.includes('insomnia') || note.includes('poor sleep') || note.includes('sleepless') || note.includes('sleep deficit')) {
+      somatic.push('Sleep Deficit (Lack of Sleep)');
+    }
     if (note.includes('pain') || note.includes('leg') || note.includes('back') || note.includes('ache') || note.includes('calf')) {
       somatic.push('Musculoskeletal Strain');
     }
@@ -347,14 +350,20 @@ export async function predictStressAssessment(payload: {
       somatic.push('Neurological Strain');
     }
 
+    const hasHeavyEyes = somatic.includes('Ocular Fatigue (Heavy Eyes)');
+    const hasLackOfSleep = somatic.includes('Sleep Deficit (Lack of Sleep)') || sleep < 5.0;
+
     const safetyTriggers: string[] = [];
     let level: 'Low' | 'Medium' | 'High' | 'Critical' = 'Medium';
     let score = 45.0;
 
     // Strict safety floors
-    if (rt >= 650 || (rt >= 500 && rtStd >= 55) || docInd.includes('severe') || (somatic.length > 0 && sleep <= 4.5)) {
-      level = 'Critical';
-      score = Math.max(90.0, Math.min(100.0, 85.0 + (rt >= 650 ? (rt - 650) / 15 : 5) + somatic.length * 4));
+    if (rt >= 650 || (rt >= 500 && rtStd >= 55) || docInd.includes('severe') || (hasHeavyEyes && hasLackOfSleep) || (somatic.length > 0 && sleep <= 4.5)) {
+      level = (rt >= 650 || docInd.includes('severe') || (hasHeavyEyes && hasLackOfSleep && sleep <= 4.0)) ? 'Critical' : 'High';
+      score = Math.max(76.0, Math.min(100.0, 72.0 + (rt >= 460 ? (rt - 460) / 10 : 0) + somatic.length * 5));
+      if (hasHeavyEyes && hasLackOfSleep) {
+        safetyTriggers.push('Dual somatic flag: Ocular fatigue (heavy eyes) & lack of sleep — critical combat vigilance risk.');
+      }
       if (rt >= 650) safetyTriggers.push(`Severe psychomotor latency (${rt}ms avg) — Critical combat readiness hazard.`);
       if (docInd.includes('severe')) safetyTriggers.push('Doctor report flagged severe clinical stress.');
       if (somatic.length > 0) safetyTriggers.push(`Critical somatic signs: ${somatic.join(', ')}.`);
@@ -511,10 +520,20 @@ export async function analyzeDoctorReport(payload: {
   } catch {
     // Offline deterministic parsing fallback
     const notes = ((payload.clinical_notes || '') + ' ' + (payload.diagnosis || '')).toLowerCase();
-    const isSevere = /acute stress|panic|ptsd|unfit|crisis|flashback/.test(notes);
-    const isHigh = /burnout|exhaustion|insomnia|tachycardia|headache|hypoxia/.test(notes);
-    const isModerate = /fatigue|shift work|strain|lumbar/.test(notes);
+    const hasHeavyEyes = /heavy eye|eyes heavy|eye heavy|eyes feeling heavy|ocular strain|blurred vision|heavy eyelids|burning eye/.test(notes);
+    const hasSleepDeficit = /lack of sleep|no sleep|insomnia|sleep deficit|sleep disruption|sleep deprivation|poor sleep|broken sleep|inadequate sleep/.test(notes);
+    const isSevere = /acute stress|panic|ptsd|unfit|crisis|flashback|suicidal|disarm/.test(notes);
+    const isHigh = (hasHeavyEyes && hasSleepDeficit) || /burnout|exhaustion|insomnia|tachycardia|headache|hypoxia|heavy eye|eyes heavy|lack of sleep|severe sleep/.test(notes);
+    const isModerate = hasHeavyEyes || hasSleepDeficit || /fatigue|shift work|strain|lumbar|eye strain/.test(notes);
     const indicator = isSevere ? 'Severe' : isHigh ? 'High' : isModerate ? 'Moderate' : 'Normal';
+
+    const somatic: string[] = [];
+    if (hasHeavyEyes) somatic.push('ocular fatigue (heavy eyes)');
+    if (hasSleepDeficit) somatic.push('acute sleep deficit (lack of sleep)');
+    if (isHigh || isSevere) somatic.push('operational exhaustion');
+
+    const restDays = payload.recommended_rest_days || (isSevere ? 7 : isHigh ? 3 : isModerate ? 1 : 0);
+    const fitForDuty = typeof payload.fit_for_duty === 'boolean' ? payload.fit_for_duty : (!isSevere && !(hasHeavyEyes && hasSleepDeficit));
 
     return offlineFallback<DoctorReportAnalysis>({
       person_id: payload.person_id,
@@ -525,12 +544,18 @@ export async function analyzeDoctorReport(payload: {
       diagnosis: payload.diagnosis || '',
       clinical_notes: payload.clinical_notes || '',
       doctor_stress_indicator: indicator,
-      recommended_rest_days: isSevere ? 7 : isHigh ? 3 : isModerate ? 1 : 0,
-      fit_for_duty: !isSevere,
+      recommended_rest_days: restDays,
+      fit_for_duty: fitForDuty,
       clinical_urgency: isSevere ? 'Immediate' : isHigh ? 'Elevated' : 'Routine',
-      somatic_symptoms: isHigh || isSevere ? ['operational fatigue', 'sleep disruption'] : [],
-      key_clinical_findings: ['Analyzed via local defense clinical parser (Qwen-0.5B architecture)'],
-      welfare_impact: isSevere ? 'Immediate duty relief required' : 'Routine monitoring',
+      somatic_symptoms: somatic,
+      key_clinical_findings: hasHeavyEyes && hasSleepDeficit
+        ? ['Acute ocular fatigue & severe sleep deficit identified — elevated risk of vigilance microsleep']
+        : ['Analyzed via local defense clinical parser (Qwen-0.5B architecture)'],
+      welfare_impact: isSevere
+        ? 'Immediate duty relief required'
+        : isHigh
+        ? 'Mandatory rest rotation and temporary relief from armed sentry duty'
+        : 'Routine monitoring',
       model_engine: 'Qwen-0.5B Local Clinical Parser (Offline)',
     });
   }

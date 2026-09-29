@@ -15,6 +15,7 @@ import { useRouter, useFocusEffect } from 'expo-router';
 import { Colors, Spacing, Radius, Shadow } from '@/constants/theme';
 import DailyCheckInModal from '@/components/DailyCheckInModal';
 import DoctorReportModal from '@/components/DoctorReportModal';
+import SupportRequestModal from '@/components/SupportRequestModal';
 import { useStressAssessment } from '@/hooks/useStressAssessment';
 import { useSahayak } from '@/context/SahayakContext';
 import { useTheme } from '@/context/ThemeContext';
@@ -29,6 +30,7 @@ export default function PersonnelHomeScreen() {
   const [showCheckIn, setShowCheckIn] = useState(false);
   const [showDoctorModal, setShowDoctorModal] = useState(false);
   const [showConsultationModal, setShowConsultationModal] = useState(false);
+  const [showSupportModal, setShowSupportModal] = useState(false);
   const [hasCheckedIn, setHasCheckedIn] = useState(false);
 
   const {
@@ -113,6 +115,32 @@ export default function PersonnelHomeScreen() {
             </View>
           )}
         </View>
+      </FadeInView>
+
+      {/* ── 1-TAP ASSISTANCE: "I NEED SUPPORT" ACTION BANNER ─────── */}
+      <FadeInView delay={30}>
+        <BouncyPressable
+          style={[styles.oneTapSupportBanner, { backgroundColor: '#DC2626' }]}
+          onPress={() => setShowSupportModal(true)}
+        >
+          <View style={styles.oneTapSupportIconBox}>
+            <Ionicons name="hand-left" size={24} color="#ffffff" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <View style={styles.oneTapTitleRow}>
+              <Text style={styles.oneTapSupportTitle}>I Need Support</Text>
+              <View style={styles.oneTapPillTag}>
+                <Text style={styles.oneTapPillTagText}>1-TAP ASSISTANCE</Text>
+              </View>
+            </View>
+            <Text style={styles.oneTapSupportSubtitle}>
+              Officer callback, private meeting, workload or anonymous facility issue
+            </Text>
+          </View>
+          <View style={styles.oneTapArrowCircle}>
+            <Ionicons name="chevron-forward" size={18} color="#ffffff" />
+          </View>
+        </BouncyPressable>
       </FadeInView>
 
       {/* ── REST ADVISORY & AUTO-BOOKED CONSULTATION BANNER ──────── */}
@@ -549,6 +577,15 @@ export default function PersonnelHomeScreen() {
         visible={showDoctorModal}
         onClose={() => setShowDoctorModal(false)}
         onSaved={() => {
+          refresh();
+        }}
+      />
+
+      {/* 1-Tap Support & Whistleblower Hazard Reporting Modal */}
+      <SupportRequestModal
+        visible={showSupportModal}
+        onClose={() => setShowSupportModal(false)}
+        onSubmitted={() => {
           refresh();
         }}
       />
@@ -1324,4 +1361,57 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 16,
   },
+  oneTapSupportBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: Spacing.four,
+    borderRadius: Radius.xl,
+    marginBottom: Spacing.four,
+    gap: Spacing.three,
+    ...Shadow.md,
+  },
+  oneTapSupportIconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255, 255, 255, 0.22)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  oneTapTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 2,
+  },
+  oneTapSupportTitle: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '900',
+  },
+  oneTapPillTag: {
+    backgroundColor: '#ffffff',
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 6,
+  },
+  oneTapPillTagText: {
+    color: '#DC2626',
+    fontSize: 9,
+    fontWeight: '900',
+  },
+  oneTapSupportSubtitle: {
+    color: 'rgba(255, 255, 255, 0.9)',
+    fontSize: 12,
+    lineHeight: 16,
+  },
+  oneTapArrowCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });
+
