@@ -39,15 +39,18 @@ export function useStressAssessment() {
       let falseTaps = 1.0;
 
       if (sessions.length > 0) {
-        const rtValues = sessions.map((s) => s.avg_reaction_time_ms || 450.0);
-        avgRt = rtValues.reduce((a, b) => a + b, 0) / rtValues.length;
+        const validRtSessions = sessions.filter((s) => (s.avg_reaction_time_ms ?? 0) > 0);
+        if (validRtSessions.length > 0) {
+          const rtValues = validRtSessions.map((s) => s.avg_reaction_time_ms);
+          avgRt = rtValues.reduce((a, b) => a + b, 0) / rtValues.length;
 
-        // Compute reaction time std dev
-        const mean = avgRt;
-        const variance =
-          rtValues.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) /
-          Math.max(1, rtValues.length);
-        rtStd = Math.sqrt(variance);
+          // Compute reaction time std dev
+          const mean = avgRt;
+          const variance =
+            rtValues.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) /
+            Math.max(1, rtValues.length);
+          rtStd = Math.sqrt(variance);
+        }
 
         const accValues = sessions.map((s) => (s.accuracy != null ? (s.accuracy > 1 ? s.accuracy / 100 : s.accuracy) : 0.85));
         acc = accValues.reduce((a, b) => a + b, 0) / accValues.length;

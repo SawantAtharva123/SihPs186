@@ -98,6 +98,7 @@ export default function GoNoGoGame({ visible, onClose, onResult }: Props) {
 
   const stimulusStartTime = useRef<number>(0);
   const tappedInWindow = useRef(false);
+  const lastTapReactionTime = useRef<number | null>(null);
   const timeouts = useRef<ReturnType<typeof setTimeout>[]>([]);
   const currentStimulusRef = useRef<StimulusType | null>(null);
   const completedTrialsRef = useRef<Trial[]>([]);
@@ -132,6 +133,7 @@ export default function GoNoGoGame({ visible, onClose, onResult }: Props) {
         const stimType = trials[index];
         currentStimulusRef.current = stimType;
         tappedInWindow.current = false;
+        lastTapReactionTime.current = null;
         stimulusStartTime.current = Date.now();
         setCurrentStimulus(stimType);
         setGameState('showing_stimulus');
@@ -144,7 +146,7 @@ export default function GoNoGoGame({ visible, onClose, onResult }: Props) {
 
         const hideTimeout = setTimeout(() => {
           const tapped = tappedInWindow.current;
-          const rt = tapped ? Date.now() - stimulusStartTime.current : null;
+          const rt = tapped ? lastTapReactionTime.current : null;
           const newTrial: Trial = { type: stimType, tapped, reactionTimeMs: rt };
           const nextAccumulated = [...accumulated, newTrial];
           completedTrialsRef.current = nextAccumulated;
@@ -180,6 +182,9 @@ export default function GoNoGoGame({ visible, onClose, onResult }: Props) {
   const handleTap = () => {
     if (gameState !== 'showing_stimulus') return;
     if (tappedInWindow.current) return;
+    const now = Date.now();
+    const rt = Math.max(10, now - stimulusStartTime.current);
+    lastTapReactionTime.current = rt;
     tappedInWindow.current = true;
     const stimulus = currentStimulusRef.current;
     if (stimulus === 'go') {
