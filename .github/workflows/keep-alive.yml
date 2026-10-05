@@ -14,9 +14,10 @@ jobs:
         run: |
           TARGET_URL="${{ secrets.RENDER_ML_SERVICE_URL }}"
           if [ -z "$TARGET_URL" ]; then
-            echo "RENDER_ML_SERVICE_URL secret not set. Skipping ping."
-            echo "Add your Render URL in GitHub repo Settings -> Secrets and variables -> Actions"
-            exit 0
+            TARGET_URL="https://sahayak-ml-service.onrender.com"
+            echo "RENDER_ML_SERVICE_URL secret not set. Using default: $TARGET_URL"
           fi
+          TARGET_URL="${TARGET_URL%/}"
           echo "Pinging: ${TARGET_URL}/health"
-          curl -s -f -m 30 "${TARGET_URL}/health" || echo "Ping completed."
+          STATUS_CODE=$(curl -s -o /dev/null -w "%{http_code}" -m 45 "${TARGET_URL}/health" || echo "failed")
+          echo "Render response HTTP status: $STATUS_CODE"
