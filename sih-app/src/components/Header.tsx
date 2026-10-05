@@ -13,13 +13,14 @@ import { useRouter } from 'expo-router';
 import { useSahayak } from '@/context/SahayakContext';
 import { useTheme } from '@/context/ThemeContext';
 import ThemeToggleBtn from '@/components/animations/ThemeToggleBtn';
+import MLServiceIndicator from '@/components/MLServiceIndicator';
 import { Colors, Spacing, Radius, Shadow } from '@/constants/theme';
 import { UserRole } from '@/types/sahayak';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { logout as authLogout } from '@/services/auth';
 
 export default function Header() {
-  const { role, isOffline, setIsOffline, currentUser, setCurrentUser, setRole } = useSahayak();
+  const { role, isOffline, setIsOffline, currentUser, setCurrentUser, setRole, mlStatus } = useSahayak();
   const { colors, isDark } = useTheme();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const router = useRouter();
@@ -86,24 +87,8 @@ export default function Header() {
             {/* Dark / Light Mode Toggle */}
             <ThemeToggleBtn />
 
-            {/* Offline Toggle */}
-            <TouchableOpacity
-              style={[
-                styles.offlineToggle,
-                { backgroundColor: isDark ? '#1E293B' : colors.background },
-                isOffline && { backgroundColor: colors.warningBg },
-              ]}
-              onPress={() => setIsOffline(!isOffline)}
-            >
-              <Ionicons
-                name={isOffline ? 'cloud-offline' : 'cloud-done'}
-                size={16}
-                color={isOffline ? colors.warning : colors.success}
-              />
-              {isOffline && (
-                <Text style={[styles.offlineText, { color: colors.warning }]}>Offline</Text>
-              )}
-            </TouchableOpacity>
+            {/* Live ML Service Indicator */}
+            <MLServiceIndicator />
 
             {/* Static Role Badge */}
             <View
@@ -129,11 +114,34 @@ export default function Header() {
           </View>
         </View>
 
+        {mlStatus === 'disconnected' && !isOffline && (
+          <View
+            style={[
+              styles.offlineBanner,
+              {
+                backgroundColor: isDark ? '#451A03' : '#FEF2F2',
+                borderBottomColor: isDark ? '#78350F' : '#FECACA',
+                borderBottomWidth: 1,
+              },
+            ]}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+              <Ionicons name="alert-circle" size={14} color="#EF4444" />
+              <Text style={[styles.offlineBannerText, { color: isDark ? '#FECDD3' : '#991B1B' }]}>
+                ML Service Disconnected — Fallback local inference active. Zero risk undercounting enabled.
+              </Text>
+            </View>
+          </View>
+        )}
+
         {isOffline && (
           <View style={[styles.offlineBanner, { backgroundColor: colors.warningBg }]}>
-            <Text style={[styles.offlineBannerText, { color: colors.warning }]}>
-              You are currently offline. Changes are saved locally and will sync when reconnected.
-            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+              <Ionicons name="cloud-offline" size={14} color={colors.warning} />
+              <Text style={[styles.offlineBannerText, { color: colors.warning }]}>
+                Offline mode active. All observations are encrypted locally in SQLite and will sync when reconnected.
+              </Text>
+            </View>
           </View>
         )}
       </SafeAreaView>

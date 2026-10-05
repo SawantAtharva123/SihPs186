@@ -1,16 +1,17 @@
 import Constants from 'expo-constants';
 import { getDatabase } from '../offline/database';
 
-function resolveBaseUrl(): string {
+export function resolveBaseUrl(): string {
   if (process.env.EXPO_PUBLIC_ML_SERVICE_URL) {
     return process.env.EXPO_PUBLIC_ML_SERVICE_URL;
   }
-  // When running in browser on deployed domains (e.g. Netlify)
+  // When running in browser
   if (typeof window !== 'undefined' && window.location?.hostname) {
     const host = window.location.hostname;
     if (host !== 'localhost' && host !== '127.0.0.1') {
       return 'https://sahayak-ml-service.onrender.com';
     }
+    return 'http://localhost:8000';
   }
   const hostUri = Constants.expoConfig?.hostUri;
   if (hostUri) {
@@ -22,8 +23,8 @@ function resolveBaseUrl(): string {
   return 'https://sahayak-ml-service.onrender.com';
 }
 
-const BASE_URL = resolveBaseUrl();
-const TIMEOUT_MS = 15000;
+export const BASE_URL = resolveBaseUrl();
+const TIMEOUT_MS = 6000;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -53,6 +54,9 @@ async function fetchWithTimeout(url: string, options: RequestInit): Promise<Resp
 }
 
 async function postToML<T>(endpoint: string, body: object): Promise<AnalyticsResponse<T>> {
+  if (typeof navigator !== 'undefined' && typeof navigator.onLine === 'boolean' && !navigator.onLine) {
+    throw new Error('Device is offline');
+  }
   const response = await fetchWithTimeout(`${BASE_URL}/api/v1${endpoint}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

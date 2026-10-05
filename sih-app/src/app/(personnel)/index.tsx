@@ -25,7 +25,7 @@ import PulseView from '@/components/animations/PulseView';
 
 export default function PersonnelHomeScreen() {
   const router = useRouter();
-  const { currentUser, isOffline } = useSahayak();
+  const { currentUser, isOffline, mlStatus } = useSahayak();
   const { colors, isDark } = useTheme();
   const [showCheckIn, setShowCheckIn] = useState(false);
   const [showDoctorModal, setShowDoctorModal] = useState(false);
@@ -108,10 +108,22 @@ export default function PersonnelHomeScreen() {
               Integrated Welfare & Stress Intelligence
             </Text>
           </View>
-          {isOffline && (
+          {mlStatus === 'live' && (
+            <View style={[styles.offlineBadge, { backgroundColor: isDark ? 'rgba(16, 185, 129, 0.15)' : '#ECFDF5', borderColor: isDark ? 'rgba(16, 185, 129, 0.4)' : '#A7F3D0' }]}>
+              <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#10B981' }} />
+              <Text style={[styles.offlineText, { color: '#10B981' }]}>ML Live</Text>
+            </View>
+          )}
+          {mlStatus === 'offline' && (
             <View style={[styles.offlineBadge, { backgroundColor: isDark ? '#451A03' : '#FFFBEB', borderColor: isDark ? '#78350F' : '#FDE68A' }]}>
-              <Ionicons name="cloud-offline" size={14} color={colors.warning} />
+              <Ionicons name="cloud-offline" size={13} color={colors.warning} />
               <Text style={[styles.offlineText, { color: colors.warning }]}>Offline</Text>
+            </View>
+          )}
+          {mlStatus === 'disconnected' && !isOffline && (
+            <View style={[styles.offlineBadge, { backgroundColor: isDark ? '#451A03' : '#FEF2F2', borderColor: isDark ? '#78350F' : '#FECACA' }]}>
+              <Ionicons name="alert-circle" size={13} color="#EF4444" />
+              <Text style={[styles.offlineText, { color: '#EF4444' }]}>Disconnected</Text>
             </View>
           )}
         </View>
