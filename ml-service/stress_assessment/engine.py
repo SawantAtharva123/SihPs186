@@ -27,16 +27,102 @@ BUNDLE_PATH = os.path.join(os.path.dirname(__file__), "..", "models", "stress_mo
 
 _bundle_cache = None
 
+FALLBACK_FEATURE_COLUMNS = [
+    "medical_consultations_count", "sick_leave_days", "prior_counseling_sessions", "disciplinary_incidents", "absenteeism_rate_pct",
+    "rapid_avg_reaction_time_ms", "rapid_reaction_time_std_ms", "rapid_accuracy", "rapid_missed_targets", "rapid_false_taps",
+    "focus_avg_reaction_time_ms", "focus_accuracy", "focus_distractor_errors", "focus_missed_targets",
+    "sleep_hours", "sleep_quality_score", "energy_level", "mood_level", "recovery_level",
+    "wellness_survey_score", "peer_support_score", "financial_stress_level", "self_reported_stress_num",
+    "duty_hours_per_week", "night_shifts_per_month", "workload_index", "combat_exposure_incidents", "family_separation_months"
+]
+
+FALLBACK_COST_MATRIX = np.array([
+    [0.0, 1.0, 2.0, 3.0],
+    [3.0, 0.0, 1.0, 2.0],
+    [8.0, 4.0, 0.0, 1.0],
+    [22.0, 12.0, 4.0, 0.0]
+])
+
+FALLBACK_CLASS_NAMES = ["Low", "Medium", "High", "Critical"]
+
+
+class HeuristicFallbackModel:
+    """Zero-crash fallback classifier when LightGBM or serialized model bundle cannot be loaded."""
+    def predict_proba(self, X_df: pd.DataFrame) -> np.ndarray:
+        probs = []
+        for _, row in X_df.iterrows():
+            sleep = float(row.get("sleep_hours", 7.0))
+            rapid_rt = float(row.get("rapid_avg_reaction_time_ms", 450.0))
+            self_stress = float(row.get("self_reported_stress_num", 1.0))
+            duty = float(row.get("duty_hours_per_week", 45.0))
+            sick_leave = float(row.get("sick_leave_days", 0.0))
+            night_shifts = float(row.get("night_shifts_per_month", 2.0))
+
+            score = 25.0
+            if sleep < 5.0: score += 25.0
+            elif sleep < 6.5: score += 12.0
+            if rapid_rt > 550.0: score += 25.0
+            elif rapid_rt > 450.0: score += 12.0
+            score += self_stress * 10.0
+            if duty > 60.0: score += 15.0
+            if sick_leave > 5: score += 15.0
+            if night_shifts > 6: score += 10.0
+            score = max(0.0, min(100.0, score))
+
+            if score < 32:
+                p = [0.75, 0.20, 0.04, 0.01]
+            elif score < 58:
+                p = [0.15, 0.65, 0.15, 0.05]
+            elif score < 78:
+                p = [0.03, 0.17, 0.65, 0.15]
+            else:
+                p = [0.01, 0.04, 0.25, 0.70]
+            probs.append(p)
+        return np.array(probs)
+
+
+def _create_heuristic_fallback_bundle() -> Dict[str, Any]:
+    return {
+        "model": HeuristicFallbackModel(),
+        "feature_columns": FALLBACK_FEATURE_COLUMNS,
+        "class_names": FALLBACK_CLASS_NAMES,
+        "risk_map": {"Low": 0, "Medium": 1, "High": 2, "Critical": 3},
+        "cost_matrix": FALLBACK_COST_MATRIX,
+        "feature_importances": {col: 1.0 / len(FALLBACK_FEATURE_COLUMNS) for col in FALLBACK_FEATURE_COLUMNS},
+        "modality_weights": {
+            "doctor_reports": 0.30,
+            "mini_games": 0.25,
+            "self_assessment": 0.25,
+            "operational_context": 0.20
+        },
+        "metrics": {"fallback_active": True},
+        "version": "1.0.0-fallback"
+    }
+
 
 def get_model_bundle() -> Dict[str, Any]:
     global _bundle_cache
     if _bundle_cache is None:
-        if not os.path.exists(BUNDLE_PATH):
-            from stress_assessment.trainer import train_model
-            logger.info("Model bundle not found. Training model now...")
-            _bundle_cache = train_model()
+        if os.path.exists(BUNDLE_PATH):
+            try:
+                _bundle_cache = joblib.load(BUNDLE_PATH)
+                logger.info("Successfully loaded model bundle from %s", BUNDLE_PATH)
+            except Exception as e:
+                logger.error("Failed to load model bundle from %s: %s. Falling back to heuristic bundle.", BUNDLE_PATH, e)
+                try:
+                    from stress_assessment.trainer import train_model
+                    _bundle_cache = train_model()
+                except Exception as te:
+                    logger.error("Failed to re-train model: %s. Using heuristic fallback.", te)
+                    _bundle_cache = _create_heuristic_fallback_bundle()
         else:
-            _bundle_cache = joblib.load(BUNDLE_PATH)
+            try:
+                from stress_assessment.trainer import train_model
+                logger.info("Model bundle not found at %s. Training model now...", BUNDLE_PATH)
+                _bundle_cache = train_model()
+            except Exception as te:
+                logger.error("Failed to train model: %s. Using heuristic fallback.", te)
+                _bundle_cache = _create_heuristic_fallback_bundle()
     return _bundle_cache
 
 
