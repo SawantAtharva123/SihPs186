@@ -26,7 +26,7 @@ interface SahayakContextProps {
   mlDetails: MLHealthDetails;
   isManualOffline: boolean;
   setIsManualOffline: (manual: boolean) => void;
-  pingMLService: () => Promise<MLHealthDetails>;
+  pingMLService: (options?: { showChecking?: boolean }) => Promise<MLHealthDetails>;
 }
 
 const SahayakContext = createContext<SahayakContextProps | undefined>(undefined);
@@ -50,56 +50,118 @@ export const SahayakProvider = ({ children }: { children: ReactNode }) => {
     serviceUrl: BASE_URL,
   });
 
-  const pingMLService = useCallback(async (): Promise<MLHealthDetails> => {
-    if (isManualOffline) {
-      const details: MLHealthDetails = {
-        status: 'offline',
-        latencyMs: null,
-        lastChecked: new Date(),
-        serviceUrl: BASE_URL,
-        error: 'Manual offline simulation active',
-      };
-      setMlStatus('offline');
-      setMlDetails(details);
-      return details;
-    }
+  const isCheckingRef = React.useRef(false);
+  const mlStatusRef = React.useRef<MLConnectionStatus>(isDeviceOffline() ? 'offline' : 'checking');
+  const mlDetailsRef = React.useRef<MLHealthDetails>({
+    status: isDeviceOffline() ? 'offline' : 'checking',
+    latencyMs: null,
+    lastChecked: null,
+    serviceUrl: BASE_URL,
+  });
+  const isManualOfflineRef = React.useRef(isManualOffline);
+  isManualOfflineRef.current = isManualOffline;
 
-    if (isDeviceOffline()) {
-      const details: MLHealthDetails = {
-        status: 'offline',
-        latencyMs: null,
-        lastChecked: new Date(),
-        serviceUrl: BASE_URL,
-        error: 'Device is offline',
-      };
-      setMlStatus('offline');
-      setMlDetails(details);
-      return details;
-    }
+  const pingMLService = useCallback(
+    async (options?: { showChecking?: boolean }): Promise<MLHealthDetails> => {
+      // Prevent overlapping concurrent checks
+      if (isCheckingRef.current) {
+        return mlDetailsRef.current;
+      }
+      isCheckingRef.current = true;
 
-    setMlStatus('checking');
-    const result = await checkMLHealth(4500);
-    setMlStatus(result.status);
-    setMlDetails(result);
-    return result;
-  }, [isManualOffline]);
+      try {
+        if (isManualOfflineRef.current) {
+          const details: MLHealthDetails = {
+            status: 'offline',
+            latencyMs: null,
+            lastChecked: new Date(),
+            serviceUrl: BASE_URL,
+            error: 'Manual offline simulation active',
+          };
+          if (mlStatusRef.current !== 'offline') {
+            mlStatusRef.current = 'offline';
+            setMlStatus('offline');
+          }
+          mlDetailsRef.current = details;
+          setMlDetails(details);
+          return details;
+        }
+
+        if (isDeviceOffline()) {
+          const details: MLHealthDetails = {
+            status: 'offline',
+            latencyMs: null,
+            lastChecked: new Date(),
+            serviceUrl: BASE_URL,
+            error: 'Device is offline',
+          };
+          if (mlStatusRef.current !== 'offline') {
+            mlStatusRef.current = 'offline';
+            setMlStatus('offline');
+          }
+          mlDetailsRef.current = details;
+          setMlDetails(details);
+          return details;
+        }
+
+        // Only show 'checking' if explicitly requested (e.g. manual user retry)
+        // or on initial mount when no status has ever been resolved
+        if (options?.showChecking || mlStatusRef.current === 'checking') {
+          if (mlStatusRef.current !== 'checking') {
+            mlStatusRef.current = 'checking';
+            setMlStatus('checking');
+          }
+        }
+
+        const result = await checkMLHealth(4500);
+
+        // ONLY update mlStatus if the status actually changed!
+        if (mlStatusRef.current !== result.status) {
+          mlStatusRef.current = result.status;
+          setMlStatus(result.status);
+        }
+
+        // ONLY update mlDetails if something meaningful changed
+        const prev = mlDetailsRef.current;
+        const hasChanged =
+          prev.status !== result.status ||
+          prev.error !== result.error ||
+          prev.modelVersion !== result.modelVersion ||
+          Math.abs((prev.latencyMs ?? 0) - (result.latencyMs ?? 0)) > 60;
+
+        if (hasChanged) {
+          mlDetailsRef.current = result;
+          setMlDetails(result);
+        }
+
+        return result;
+      } finally {
+        isCheckingRef.current = false;
+      }
+    },
+    []
+  );
 
   // Backward-compatible toggle for isOffline
   const setIsOffline = useCallback(
     (offline: boolean) => {
       setIsManualOffline(offline);
+      isManualOfflineRef.current = offline;
       if (offline) {
+        mlStatusRef.current = 'offline';
         setMlStatus('offline');
-        setMlDetails((prev) => ({
-          ...prev,
+        const details: MLHealthDetails = {
+          ...mlDetailsRef.current,
           status: 'offline',
           lastChecked: new Date(),
           error: 'Manual offline simulation active',
-        }));
+        };
+        mlDetailsRef.current = details;
+        setMlDetails(details);
       } else {
         // Turning offline mode off -> immediately ping the ML service
         setTimeout(() => {
-          pingMLService();
+          pingMLService({ showChecking: true });
         }, 50);
       }
     },
@@ -111,39 +173,43 @@ export const SahayakProvider = ({ children }: { children: ReactNode }) => {
 
   // Mount effect: initial ping & subscribe to browser network events
   useEffect(() => {
-    pingMLService();
+    // Initial health check on mount
+    pingMLService({ showChecking: mlStatusRef.current === 'checking' });
 
     const unsubscribe = subscribeToNetworkEvents(
       () => {
         // Device came online
-        if (!isManualOffline) {
-          pingMLService();
+        if (!isManualOfflineRef.current) {
+          pingMLService({ showChecking: false });
         }
       },
       () => {
         // Device went offline
+        mlStatusRef.current = 'offline';
         setMlStatus('offline');
-        setMlDetails((prev) => ({
-          ...prev,
+        const details: MLHealthDetails = {
+          ...mlDetailsRef.current,
           status: 'offline',
           lastChecked: new Date(),
           error: 'Device network disconnected',
-        }));
+        };
+        mlDetailsRef.current = details;
+        setMlDetails(details);
       }
     );
 
-    // Periodic health check every 25 seconds (or 15 seconds if disconnected to catch server wake-up)
+    // Periodic silent health check every 25 seconds (without setting 'checking' state)
     const interval = setInterval(() => {
-      if (!isManualOffline) {
-        pingMLService();
+      if (!isManualOfflineRef.current) {
+        pingMLService({ showChecking: false });
       }
-    }, mlStatus === 'disconnected' ? 15000 : 25000);
+    }, 25000);
 
     return () => {
       unsubscribe();
       clearInterval(interval);
     };
-  }, [isManualOffline, mlStatus, pingMLService]);
+  }, [pingMLService]);
 
   return (
     <SahayakContext.Provider

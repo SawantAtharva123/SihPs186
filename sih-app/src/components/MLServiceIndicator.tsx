@@ -18,11 +18,10 @@ export default function MLServiceIndicator() {
   const { colors, isDark } = useTheme();
   const [modalVisible, setModalVisible] = useState(false);
   const [pinging, setPinging] = useState(false);
-
   const handleManualPing = async () => {
     setPinging(true);
     try {
-      await pingMLService();
+      await pingMLService({ showChecking: true });
     } finally {
       setPinging(false);
     }
@@ -286,9 +285,11 @@ const styles = StyleSheet.create({
   indicatorPill: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 5,
     paddingHorizontal: Spacing.two + 2,
     paddingVertical: 4,
+    minHeight: 28,
     borderRadius: Radius.full,
     borderWidth: 1,
   },

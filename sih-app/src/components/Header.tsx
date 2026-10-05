@@ -20,7 +20,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { logout as authLogout } from '@/services/auth';
 
 export default function Header() {
-  const { role, isOffline, setIsOffline, currentUser, setCurrentUser, setRole, mlStatus } = useSahayak();
+  const { role, isOffline, setIsOffline, currentUser, setCurrentUser, setRole } = useSahayak();
   const { colors, isDark } = useTheme();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const router = useRouter();
@@ -113,26 +113,6 @@ export default function Header() {
             </TouchableOpacity>
           </View>
         </View>
-
-        {mlStatus === 'disconnected' && !isOffline && (
-          <View
-            style={[
-              styles.offlineBanner,
-              {
-                backgroundColor: isDark ? '#451A03' : '#FEF2F2',
-                borderBottomColor: isDark ? '#78350F' : '#FECACA',
-                borderBottomWidth: 1,
-              },
-            ]}
-          >
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-              <Ionicons name="alert-circle" size={14} color="#EF4444" />
-              <Text style={[styles.offlineBannerText, { color: isDark ? '#FECDD3' : '#991B1B' }]}>
-                ML Service Disconnected — Fallback local inference active. Zero risk undercounting enabled.
-              </Text>
-            </View>
-          </View>
-        )}
 
         {isOffline && (
           <View style={[styles.offlineBanner, { backgroundColor: colors.warningBg }]}>
