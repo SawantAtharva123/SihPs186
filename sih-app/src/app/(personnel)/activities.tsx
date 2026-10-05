@@ -113,12 +113,20 @@ export default function ActivitiesScreen() {
   // ── Game result handler ──────────────────────────────────────────────────
   async function handleResult(activityType: string, result: any) {
     try {
+      const rawScore = result.score ?? result.accuracy ?? 0;
+      const normalizedScore = Math.min(100, Math.max(0, Math.round(rawScore)));
+      const rawAccuracy = result.accuracy ?? 0;
+      const normalizedAccuracy = Math.min(
+        100,
+        Math.max(0, Math.round(rawAccuracy > 1 ? rawAccuracy : rawAccuracy * 100))
+      );
+
       await insertActivitySession({
         activityType,
         difficulty: 'standard',
         durationMs: result.durationMs ?? 0,
-        score: result.score ?? result.accuracy ?? 0,
-        accuracy: result.accuracy ?? 0,
+        score: normalizedScore,
+        accuracy: normalizedAccuracy,
         avgReactionTimeMs: result.avgReactionTimeMs ?? 0,
         reactionVariabilityMs: result.reactionVariabilityMs ?? 0,
         correctAnswers: result.correctAnswers ?? 0,
@@ -318,11 +326,13 @@ export default function ActivitiesScreen() {
       {tab === 'play' ? renderPlayTab() : renderScoresTab()}
 
       {/* Game Modals */}
-      <QuickTapGame
-        visible={activeGame === 'quick_tap'}
-        onClose={() => setActiveGame(null)}
-        onResult={(r: any) => handleResult('quick_tap', r)}
-      />
+      {activeGame === 'quick_tap' && (
+        <QuickTapGame
+          visible
+          onClose={() => setActiveGame(null)}
+          onResult={(r: any) => handleResult('quick_tap', r)}
+        />
+      )}
       {activeGame === 'go_no_go' && (
         <GoNoGoGame
           visible
@@ -330,21 +340,27 @@ export default function ActivitiesScreen() {
           onResult={(r: any) => handleResult('go_no_go', r)}
         />
       )}
-      <SequenceRecallGame
-        visible={activeGame === 'sequence_recall'}
-        onClose={() => setActiveGame(null)}
-        onResult={(r: any) => handleResult('sequence_recall', r)}
-      />
-      <OddOneOutGame
-        visible={activeGame === 'odd_one_out'}
-        onClose={() => setActiveGame(null)}
-        onResult={(r: any) => handleResult('odd_one_out', r)}
-      />
-      <DirectionMatchGame
-        visible={activeGame === 'direction_match'}
-        onClose={() => setActiveGame(null)}
-        onResult={(r: any) => handleResult('direction_match', r)}
-      />
+      {activeGame === 'sequence_recall' && (
+        <SequenceRecallGame
+          visible
+          onClose={() => setActiveGame(null)}
+          onResult={(r: any) => handleResult('sequence_recall', r)}
+        />
+      )}
+      {activeGame === 'odd_one_out' && (
+        <OddOneOutGame
+          visible
+          onClose={() => setActiveGame(null)}
+          onResult={(r: any) => handleResult('odd_one_out', r)}
+        />
+      )}
+      {activeGame === 'direction_match' && (
+        <DirectionMatchGame
+          visible
+          onClose={() => setActiveGame(null)}
+          onResult={(r: any) => handleResult('direction_match', r)}
+        />
+      )}
     </View>
   );
 }

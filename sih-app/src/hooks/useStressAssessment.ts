@@ -49,7 +49,7 @@ export function useStressAssessment() {
           Math.max(1, rtValues.length);
         rtStd = Math.sqrt(variance);
 
-        const accValues = sessions.map((s) => s.accuracy || 0.85);
+        const accValues = sessions.map((s) => (s.accuracy != null ? (s.accuracy > 1 ? s.accuracy / 100 : s.accuracy) : 0.85));
         acc = accValues.reduce((a, b) => a + b, 0) / accValues.length;
 
         const missedValues = sessions.map((s) => (s as any).missed_answers || 0);

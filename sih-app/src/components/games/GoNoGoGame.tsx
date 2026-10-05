@@ -56,8 +56,9 @@ function generateTrials(): StimulusType[] {
 }
 
 function computeResult(trials: Trial[]): GameResult {
-  const goTrials = trials.filter((t) => t.type === 'go');
-  const nogoTrials = trials.filter((t) => t.type === 'nogo');
+  const safeTrials = trials.slice(0, TOTAL_TRIALS);
+  const goTrials = safeTrials.filter((t) => t.type === 'go');
+  const nogoTrials = safeTrials.filter((t) => t.type === 'nogo');
 
   const hits = goTrials.filter((t) => t.tapped).length;
   const misses = goTrials.filter((t) => !t.tapped).length;
@@ -65,22 +66,23 @@ function computeResult(trials: Trial[]): GameResult {
   const correctRejections = nogoTrials.filter((t) => !t.tapped).length;
 
   const correctTotal = hits + correctRejections;
-  const accuracy = Math.round((correctTotal / TOTAL_TRIALS) * 100);
+  const accuracy = Math.min(100, Math.max(0, Math.round((correctTotal / TOTAL_TRIALS) * 100)));
 
-  const rts = trials
+  const rts = safeTrials
     .filter((t) => t.tapped && t.type === 'go' && t.reactionTimeMs !== null)
     .map((t) => t.reactionTimeMs as number);
   const avgRT = rts.length > 0 ? Math.round(rts.reduce((a, b) => a + b, 0) / rts.length) : 0;
 
-  const score = Math.round((accuracy / 100) * 100 - (falseAlarms * 5) - (misses * 2));
+  const rawScore = accuracy - (falseAlarms * 5) - (misses * 2);
+  const score = Math.min(100, Math.max(0, Math.round(rawScore)));
 
   return {
-    score: Math.max(0, score),
+    score,
     accuracy,
     avgReactionTimeMs: avgRT,
-    correctAnswers: correctTotal,
-    incorrectAnswers: falseAlarms,
-    missedAnswers: misses,
+    correctAnswers: Math.min(TOTAL_TRIALS, correctTotal),
+    incorrectAnswers: Math.min(TOTAL_TRIALS, falseAlarms),
+    missedAnswers: Math.min(TOTAL_TRIALS, misses),
   };
 }
 
@@ -99,6 +101,7 @@ export default function GoNoGoGame({ visible, onClose, onResult }: Props) {
   const timeouts = useRef<ReturnType<typeof setTimeout>[]>([]);
   const currentStimulusRef = useRef<StimulusType | null>(null);
   const completedTrialsRef = useRef<Trial[]>([]);
+  const isRunningRef = useRef(false);
 
   const clearAllTimeouts = () => {
     timeouts.current.forEach(clearTimeout);
@@ -106,6 +109,7 @@ export default function GoNoGoGame({ visible, onClose, onResult }: Props) {
   };
 
   const finishGame = useCallback((trials: Trial[]) => {
+    isRunningRef.current = false;
     clearAllTimeouts();
     const res = computeResult(trials);
     setResult(res);
@@ -159,6 +163,9 @@ export default function GoNoGoGame({ visible, onClose, onResult }: Props) {
   );
 
   const startGame = () => {
+    if (isRunningRef.current) return;
+    isRunningRef.current = true;
+    clearAllTimeouts();
     const trials = generateTrials();
     setTrialList(trials);
     setCompletedTrials([]);
@@ -183,6 +190,7 @@ export default function GoNoGoGame({ visible, onClose, onResult }: Props) {
   };
 
   const handleClose = () => {
+    isRunningRef.current = false;
     clearAllTimeouts();
     setGameState('idle');
     setCurrentStimulus(null);
@@ -193,6 +201,7 @@ export default function GoNoGoGame({ visible, onClose, onResult }: Props) {
 
   useEffect(() => {
     if (!visible) {
+      isRunningRef.current = false;
       clearAllTimeouts();
       setGameState('idle');
       setCurrentStimulus(null);
@@ -201,7 +210,8 @@ export default function GoNoGoGame({ visible, onClose, onResult }: Props) {
     }
   }, [visible]);
 
-  const progress = completedTrials.length / TOTAL_TRIALS;
+  const currentCount = Math.min(TOTAL_TRIALS, completedTrials.length);
+  const progress = currentCount / TOTAL_TRIALS;
 
   const renderIdle = () => (
     <View style={styles.centerContent}>
@@ -242,7 +252,7 @@ export default function GoNoGoGame({ visible, onClose, onResult }: Props) {
           <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
         </View>
         <Text style={styles.trialCounter}>
-          {completedTrials.length} / {TOTAL_TRIALS}
+          {currentCount} / {TOTAL_TRIALS}
         </Text>
       </View>
 
@@ -300,7 +310,7 @@ export default function GoNoGoGame({ visible, onClose, onResult }: Props) {
         <View style={styles.resultCard}>
           <View style={styles.scoreRow}>
             <Text style={styles.scoreLabel}>Score</Text>
-            <Text style={styles.scoreValue}>{result.score}</Text>
+            <Text style={styles.scoreValue}>{result.score} / 100</Text>
           </View>
           <View style={styles.divider} />
           <View style={styles.metricRow}>
