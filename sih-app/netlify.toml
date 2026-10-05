@@ -1,0 +1,13 @@
+# Netlify Configuration for SAHAYAK Frontend (sih-app base directory)
+
+[build]
+  publish = "dist"
+  command = "npx expo export --platform web"
+
+[build.environment]
+  EXPO_PUBLIC_ML_SERVICE_URL = "https://sahayak-ml-service.onrender.com"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

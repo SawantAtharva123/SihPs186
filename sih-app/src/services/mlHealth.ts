@@ -1,4 +1,4 @@
-import { BASE_URL } from './analyticsClient';
+import { BASE_URL, resolveBaseUrl } from './analyticsClient';
 
 export type MLConnectionStatus = 'live' | 'disconnected' | 'offline' | 'checking';
 
@@ -28,8 +28,8 @@ export function isDeviceOffline(): boolean {
  * - 'offline': Device has no network connection (navigator.onLine === false)
  * - 'disconnected': Device has internet, but cannot reach the ML service (timeout, 5xx, CORS, host down)
  */
-export async function checkMLHealth(timeoutMs = 4500): Promise<MLHealthDetails> {
-  const serviceUrl = BASE_URL;
+export async function checkMLHealth(timeoutMs = 9000): Promise<MLHealthDetails> {
+  const serviceUrl = resolveBaseUrl();
 
   // 1. Check if device is completely offline first
   if (isDeviceOffline()) {
@@ -53,6 +53,7 @@ export async function checkMLHealth(timeoutMs = 4500): Promise<MLHealthDetails> 
       headers: {
         Accept: 'application/json',
       },
+      cache: 'no-store',
       signal: controller.signal,
     });
 

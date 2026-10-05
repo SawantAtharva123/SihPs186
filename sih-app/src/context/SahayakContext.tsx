@@ -113,26 +113,18 @@ export const SahayakProvider = ({ children }: { children: ReactNode }) => {
           }
         }
 
-        const result = await checkMLHealth(4500);
+        const timeout = options?.showChecking ? 12000 : 9000;
+        const result = await checkMLHealth(timeout);
 
-        // ONLY update mlStatus if the status actually changed!
+        // ONLY update mlStatus badge if the status actually changed (prevents UI flicker)
         if (mlStatusRef.current !== result.status) {
           mlStatusRef.current = result.status;
           setMlStatus(result.status);
         }
 
-        // ONLY update mlDetails if something meaningful changed
-        const prev = mlDetailsRef.current;
-        const hasChanged =
-          prev.status !== result.status ||
-          prev.error !== result.error ||
-          prev.modelVersion !== result.modelVersion ||
-          Math.abs((prev.latencyMs ?? 0) - (result.latencyMs ?? 0)) > 60;
-
-        if (hasChanged) {
-          mlDetailsRef.current = result;
-          setMlDetails(result);
-        }
+        // Always update details (timestamp, latency, error) so diagnostics modal stays fresh
+        mlDetailsRef.current = result;
+        setMlDetails(result);
 
         return result;
       } finally {
@@ -198,12 +190,12 @@ export const SahayakProvider = ({ children }: { children: ReactNode }) => {
       }
     );
 
-    // Periodic silent health check every 25 seconds (without setting 'checking' state)
+    // Periodic silent health check every 15 seconds (without setting 'checking' state)
     const interval = setInterval(() => {
       if (!isManualOfflineRef.current) {
         pingMLService({ showChecking: false });
       }
-    }, 25000);
+    }, 15000);
 
     return () => {
       unsubscribe();

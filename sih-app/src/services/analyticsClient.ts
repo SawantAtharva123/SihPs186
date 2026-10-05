@@ -2,29 +2,33 @@ import Constants from 'expo-constants';
 import { getDatabase } from '../offline/database';
 
 export function resolveBaseUrl(): string {
+  let url = '';
   if (process.env.EXPO_PUBLIC_ML_SERVICE_URL) {
-    return process.env.EXPO_PUBLIC_ML_SERVICE_URL;
-  }
-  // When running in browser
-  if (typeof window !== 'undefined' && window.location?.hostname) {
+    url = process.env.EXPO_PUBLIC_ML_SERVICE_URL;
+  } else if (typeof window !== 'undefined' && window.location?.hostname) {
     const host = window.location.hostname;
     if (host !== 'localhost' && host !== '127.0.0.1') {
-      return 'https://sahayak-ml-service.onrender.com';
+      url = 'https://sahayak-ml-service.onrender.com';
+    } else {
+      url = 'http://localhost:8000';
     }
-    return 'http://localhost:8000';
-  }
-  const hostUri = Constants.expoConfig?.hostUri;
-  if (hostUri) {
-    const ip = hostUri.split(':')[0];
-    if (ip && ip !== 'localhost' && ip !== '127.0.0.1') {
-      return `http://${ip}:8000`;
+  } else {
+    const hostUri = Constants.expoConfig?.hostUri;
+    if (hostUri) {
+      const ip = hostUri.split(':')[0];
+      if (ip && ip !== 'localhost' && ip !== '127.0.0.1') {
+        url = `http://${ip}:8000`;
+      }
+    }
+    if (!url) {
+      url = 'https://sahayak-ml-service.onrender.com';
     }
   }
-  return 'https://sahayak-ml-service.onrender.com';
+  return url.trim().replace(/\/+$/, '');
 }
 
 export const BASE_URL = resolveBaseUrl();
-const TIMEOUT_MS = 6000;
+const TIMEOUT_MS = 15000;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
